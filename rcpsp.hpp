@@ -7,7 +7,7 @@
 
 typedef struct tSolucao
 {
-    int tarefasTempoInicio[MAX_QTD_TAREFAS];
+    int tarefasTempoInicio[MAX_QTD_TAREFAS][2];
     int funObj;
 } Solucao;
 

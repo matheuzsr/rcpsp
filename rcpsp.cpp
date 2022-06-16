@@ -112,3 +112,88 @@ void getDuracaoTarefasEConsumoRecursos(FILE *arquivo)
     }
   } while (strcmp(linha, "************************************************************************") != 0);
 }
+
+void ordenarPrecedencia()
+{
+  RelacaoPrecedencia relacoesPrecedenciaOrdenado[MAX_QTD_TAREFAS];
+  memcpy(&relacoesPrecedenciaOrdenado, &relacoesPrecedencia, sizeof(relacoesPrecedencia));
+
+  int flag = 1;
+  RelacaoPrecedencia aux;
+
+  // TODO: alterar para uma outra função genérica, que recebe uma função que faz a condicional que ta dentro do if
+  while (flag)
+  {
+    flag = 0;
+    for (int i = 0; i < qtdTarefas; i++)
+    {
+      if (relacoesPrecedenciaOrdenado[i].qtdSucessores <
+          relacoesPrecedenciaOrdenado[i + 1].qtdSucessores)
+      {
+        flag = 1;
+        aux = relacoesPrecedenciaOrdenado[i];
+        relacoesPrecedenciaOrdenado[i] = relacoesPrecedenciaOrdenado[i + 1];
+        relacoesPrecedenciaOrdenado[i + 1] = aux;
+      }
+    }
+  }
+
+  // TODO: alterar para uma outra função genérica, que recebe uma função que faz a condicional que ta dentro do if
+  flag = 1;
+  while (flag)
+  {
+    flag = 0;
+    for (int i = 0; i < qtdTarefas; i++)
+    {
+      if (relacoesPrecedenciaOrdenado[i].qtdSucessores == relacoesPrecedenciaOrdenado[i + 1].qtdSucessores &&
+          (relacoesPrecedenciaOrdenado[i].sucessores[0] >
+           relacoesPrecedenciaOrdenado[i + 1].sucessores[0]))
+      {
+        flag = 1;
+        aux = relacoesPrecedenciaOrdenado[i];
+        relacoesPrecedenciaOrdenado[i] = relacoesPrecedenciaOrdenado[i + 1];
+        relacoesPrecedenciaOrdenado[i + 1] = aux;
+      }
+    }
+  }
+
+  /*
+  * TODO:Falta finalizar a inserção do dado lido na matriz, [tarefa][recursos]
+  * de maneira sequencial
+  * após isso será inciada as que inciam no mesmo tempo
+  */
+  int tarefaAtualOrdenada = 0;
+
+  memset(&tarefasPorDuracaoRecurso[0], -1, sizeof(tarefasPorDuracaoRecurso[0]));
+
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    if (!verificarSeEstaContidoVetor(i + 1, qtdTarefas, tarefasPorDuracaoRecurso[0]))
+    {
+      tarefasPorDuracaoRecurso[0][tarefaAtualOrdenada] = i + 1;
+      tarefaAtualOrdenada = tarefaAtualOrdenada + 1;
+    }
+
+    for (int j = 0; j < relacoesPrecedenciaOrdenado[i].qtdSucessores; j++)
+    {
+      if (!verificarSeEstaContidoVetor(relacoesPrecedenciaOrdenado[i].sucessores[j], qtdTarefas, tarefasPorDuracaoRecurso[0]))
+      {
+        tarefasPorDuracaoRecurso[0][tarefaAtualOrdenada] = relacoesPrecedenciaOrdenado[i].sucessores[j];
+        tarefaAtualOrdenada = tarefaAtualOrdenada + 1;
+      }
+    }
+  }
+  printf("");
+}
+bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[])
+{
+  for (int i = 0; i < quantidade; i++)
+  {
+    if (value == vetor[i])
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
