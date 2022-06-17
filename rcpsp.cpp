@@ -187,10 +187,6 @@ void ordenarPrecedencia()
   printf("hello");
 }
 
-void ordenarTarefasRecursos()
-{
-}
-
 bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[])
 {
   for (int i = 0; i < quantidade; i++)
@@ -202,6 +198,11 @@ bool verificarSeEstaContidoVetor(const int value, const int quantidade, const in
   }
 
   return false;
+}
+
+void ordenarTarefasRecursos()
+{
+  
 }
 
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga)
