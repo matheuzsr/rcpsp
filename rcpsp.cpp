@@ -32,6 +32,7 @@ void lerDados(const string arq)
   getRelacoesPrecedencia(arquivo);
   getDuracaoTarefasEConsumoRecursos(arquivo);
 
+  ordenarPrecedencia();
   fclose(arquivo);
 }
 
@@ -158,10 +159,10 @@ void ordenarPrecedencia()
   }
 
   /*
-  * TODO:Falta finalizar a inserção do dado lido na matriz, [tarefa][recursos]
-  * de maneira sequencial
-  * após isso será inciada as que inciam no mesmo tempo
-  */
+   * TODO:Falta finalizar a inserção do dado lido na matriz, [tarefa][recursos]
+   * de maneira sequencial
+   * após isso será inciada as que inciam no mesmo tempo
+   */
   int tarefaAtualOrdenada = 0;
 
   memset(&tarefasPorDuracaoRecurso[0], -1, sizeof(tarefasPorDuracaoRecurso[0]));
@@ -183,8 +184,13 @@ void ordenarPrecedencia()
       }
     }
   }
-  printf("");
+  printf("hello");
 }
+
+void ordenarTarefasRecursos()
+{
+}
+
 bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[])
 {
   for (int i = 0; i < quantidade; i++)
@@ -196,4 +202,9 @@ bool verificarSeEstaContidoVetor(const int value, const int quantidade, const in
   }
 
   return false;
+}
+
+void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga)
+{
+  memcpy(&solucaoNova, &solucaoAntiga, sizeof(solucaoAntiga));
 }

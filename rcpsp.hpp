@@ -36,10 +36,12 @@ void getRelacoesPrecedencia(FILE *arquivo);
 void getQtdRecursos(FILE *arquivo);
 void getDuracaoTarefasEConsumoRecursos(FILE *arquivo);
 void ordenarPrecedencia();
+void ordenarTarefasRecursos();
 
-//Metodos auxiliares
+// Metodos auxiliares
 /* Verifica se esta contido no Vetor. */
-bool verificarSeEstaContidoVetor(const int value, const int quantidade,  const int vetor[]);
+bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[]);
+void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
 
 void calcFO(Solucao &s);
 
