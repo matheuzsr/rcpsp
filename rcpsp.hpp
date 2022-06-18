@@ -27,7 +27,7 @@ RelacaoPrecedencia relacoesPrecedencia[MAX_QTD_TAREFAS];
 int consumoRecursos[MAX_QTD_TAREFAS][MAX_QTD_RECURSO];
 
 // Preenchido após ordenação
-int tarefasPorDuracaoRecurso[2][MAX_QTD_TAREFAS];
+int tarefasStartTime[2][MAX_QTD_TAREFAS];
 int recursoDisponivelAtual[MAX_QTD_RECURSO];
 
 void lerDados(std::string arq);
@@ -41,6 +41,7 @@ void ordenarTarefasRecursos();
 
 // Metodos auxiliares
 /* Verifica se esta contido no Vetor. */
+bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual);
 bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[]);
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
 

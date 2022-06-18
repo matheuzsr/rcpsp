@@ -117,17 +117,14 @@ void getDuracaoTarefasEConsumoRecursos(FILE *arquivo)
 void getQuantidadeCadaRecurso(FILE *arquivo)
 {
   fscanf(arquivo, "%s\n", &linha);
-  printf("%s", linha);
   do
   {
     fscanf(arquivo, "%s\n", &linha);
-    printf("%s", linha);
   } while (strcmp(linha, "RESOURCEAVAILABILITIES:") != 0);
 
   for (int i = 0; i < (qtdRecursos * 2) - 1; i++)
   {
     fscanf(arquivo, "%s\t", &linha);
-    printf("%s", linha);
   }
   fscanf(arquivo, "%s\t", &linha);
 
@@ -189,26 +186,96 @@ void ordenarPrecedencia()
    */
   int tarefaAtualOrdenada = 0;
 
-  memset(&tarefasPorDuracaoRecurso[0], -1, sizeof(tarefasPorDuracaoRecurso[0]));
+  memset(&tarefasStartTime[0], -1, sizeof(tarefasStartTime[0]));
+  memset(&tarefasStartTime[1], -1, sizeof(tarefasStartTime[1]));
 
   for (int i = 0; i < qtdTarefas; i++)
   {
-    if (!verificarSeEstaContidoVetor(i + 1, qtdTarefas, tarefasPorDuracaoRecurso[0]))
+    if (!verificarSeEstaContidoVetor(i + 1, qtdTarefas, tarefasStartTime[0]))
     {
-      tarefasPorDuracaoRecurso[0][tarefaAtualOrdenada] = i + 1;
+      tarefasStartTime[0][tarefaAtualOrdenada] = i + 1;
       tarefaAtualOrdenada = tarefaAtualOrdenada + 1;
     }
 
     for (int j = 0; j < relacoesPrecedenciaOrdenado[i].qtdSucessores; j++)
     {
-      if (!verificarSeEstaContidoVetor(relacoesPrecedenciaOrdenado[i].sucessores[j], qtdTarefas, tarefasPorDuracaoRecurso[0]))
+      if (!verificarSeEstaContidoVetor(relacoesPrecedenciaOrdenado[i].sucessores[j], qtdTarefas, tarefasStartTime[0]))
       {
-        tarefasPorDuracaoRecurso[0][tarefaAtualOrdenada] = relacoesPrecedenciaOrdenado[i].sucessores[j];
+        tarefasStartTime[0][tarefaAtualOrdenada] = relacoesPrecedenciaOrdenado[i].sucessores[j];
         tarefaAtualOrdenada = tarefaAtualOrdenada + 1;
       }
     }
   }
-  printf("hello");
+
+  int tempoAtual = 0;
+  bool sairWhile = true;
+  while (sairWhile)
+  {
+    bool podeEntrar = false;
+    for (int i = 0; i < qtdTarefas - 1; i++)
+    {
+      int tarefaAtual = tarefasStartTime[0][i];
+
+      // maluco ta saindo aqui
+      if (tarefasStartTime[1][i] != -1 && (tarefasStartTime[1][i] + duracao[i]) == tempoAtual)
+      {
+        for (int j = 0; j < qtdRecursos; j++)
+        {
+          recursoDisponivelAtual[j] = recursoDisponivelAtual[j] + consumoRecursos[tarefaAtual - 1][j];
+        }
+        printf("\nEu (%d) SAI no tempo %d", tarefaAtual, tempoAtual);
+      }
+
+      if (tarefasStartTime[1][i] == -1 && todosAnterioresOrdenadosJaEntraram(i))
+      {
+        // maluco ta entrando aqui
+        for (int j = 0; j < qtdRecursos; j++)
+        {
+          if (consumoRecursos[tarefaAtual - 1][j] < recursoDisponivelAtual[j])
+          {
+            podeEntrar = true;
+          }
+          else
+          {
+            podeEntrar = false;
+            break;
+          }
+        }
+
+        if (podeEntrar)
+        {
+          tarefasStartTime[1][i] = tempoAtual;
+
+          for (int j = 0; j < qtdRecursos; j++)
+          {
+            recursoDisponivelAtual[j] = recursoDisponivelAtual[j] - consumoRecursos[tarefaAtual - 1][j];
+          }
+          printf("\nEu (%d) ENTREI no tempo %d", tarefaAtual, tempoAtual);
+        }
+      }
+    }
+    tempoAtual++;
+  }
+
+  if (todosAnterioresOrdenadosJaEntraram(qtdTarefas))
+  {
+    sairWhile = false;
+  }
+
+  printf("Foi papai");
+}
+
+bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual)
+{
+  for (int i = 0; i < indiceTarefaAtual; i++)
+  {
+    if (tarefasStartTime[1][i] == -1)
+    {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[])
