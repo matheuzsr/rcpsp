@@ -96,24 +96,28 @@ void getDuracaoTarefasEConsumoRecursos(FILE *arquivo)
     fscanf(arquivo, "%s", &linha);
   }
 
-  fscanf(arquivo, "%s", &linha);
-  int idTarefaAtual = atoi(linha);
-
-  fscanf(arquivo, "%s", &linha);
-  fscanf(arquivo, "%s", &linha);
-  int duracaoTarefaAtual = atoi(linha);
-
-  duracao[idTarefaAtual - 1] = duracaoTarefaAtual;
-
-  for (int i = 0; i < qtdRecursos; i++)
+  for (int i = 0; i < qtdTarefas; i++)
   {
-    fscanf(arquivo, "%s\t", &linha);
-    consumoRecursos[idTarefaAtual - 1][i] = atoi(linha);
-    printf("%s", linha);
+    fscanf(arquivo, "%s", &linha);
+    int idTarefaAtual = atoi(linha);
+
+    fscanf(arquivo, "%s", &linha);
+    fscanf(arquivo, "%s", &linha);
+    int duracaoTarefaAtual = atoi(linha);
+
+    duracao[idTarefaAtual - 1] = duracaoTarefaAtual;
+
+    for (int i = 0; i < qtdRecursos; i++)
+    {
+      fscanf(arquivo, "%s\t", &linha);
+      consumoRecursos[idTarefaAtual - 1][i] = atoi(linha);
+    }
   }
 }
 void getQuantidadeCadaRecurso(FILE *arquivo)
 {
+  fscanf(arquivo, "%s\n", &linha);
+  printf("%s", linha);
   do
   {
     fscanf(arquivo, "%s\n", &linha);
