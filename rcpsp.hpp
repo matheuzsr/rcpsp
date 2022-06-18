@@ -25,16 +25,17 @@ int qtdRecursos;
 int duracao[MAX_QTD_TAREFAS];
 RelacaoPrecedencia relacoesPrecedencia[MAX_QTD_TAREFAS];
 int consumoRecursos[MAX_QTD_TAREFAS][MAX_QTD_RECURSO];
-int maiorQuantidadeSucessor = 0;
 
 // Preenchido após ordenação
 int tarefasPorDuracaoRecurso[2][MAX_QTD_TAREFAS];
+int recursoDisponivelAtual[MAX_QTD_RECURSO];
 
 void lerDados(std::string arq);
 void getQtdTarefas(FILE *arquivo);
 void getRelacoesPrecedencia(FILE *arquivo);
 void getQtdRecursos(FILE *arquivo);
 void getDuracaoTarefasEConsumoRecursos(FILE *arquivo);
+void getQuantidadeCadaRecurso(FILE *arquivo);
 void ordenarPrecedencia();
 void ordenarTarefasRecursos();
 

@@ -31,6 +31,7 @@ void lerDados(const string arq)
   getQtdRecursos(arquivo);
   getRelacoesPrecedencia(arquivo);
   getDuracaoTarefasEConsumoRecursos(arquivo);
+  getQuantidadeCadaRecurso(arquivo);
 
   ordenarPrecedencia();
   fclose(arquivo);
@@ -95,23 +96,42 @@ void getDuracaoTarefasEConsumoRecursos(FILE *arquivo)
     fscanf(arquivo, "%s", &linha);
   }
 
+  fscanf(arquivo, "%s", &linha);
+  int idTarefaAtual = atoi(linha);
+
+  fscanf(arquivo, "%s", &linha);
+  fscanf(arquivo, "%s", &linha);
+  int duracaoTarefaAtual = atoi(linha);
+
+  duracao[idTarefaAtual - 1] = duracaoTarefaAtual;
+
+  for (int i = 0; i < qtdRecursos; i++)
+  {
+    fscanf(arquivo, "%s\t", &linha);
+    consumoRecursos[idTarefaAtual - 1][i] = atoi(linha);
+    printf("%s", linha);
+  }
+}
+void getQuantidadeCadaRecurso(FILE *arquivo)
+{
   do
   {
-    fscanf(arquivo, "%s", &linha);
-    int idTarefaAtual = atoi(linha);
+    fscanf(arquivo, "%s\n", &linha);
+    printf("%s", linha);
+  } while (strcmp(linha, "RESOURCEAVAILABILITIES:") != 0);
 
-    fscanf(arquivo, "%s", &linha);
-    fscanf(arquivo, "%s", &linha);
-    int duracaoTarefaAtual = atoi(linha);
+  for (int i = 0; i < (qtdRecursos * 2) - 1; i++)
+  {
+    fscanf(arquivo, "%s\t", &linha);
+    printf("%s", linha);
+  }
+  fscanf(arquivo, "%s\t", &linha);
 
-    duracao[idTarefaAtual - 1] = duracaoTarefaAtual;
-
-    for (int i = 0; i < qtdRecursos; i++)
-    {
-      fscanf(arquivo, "%s\t", &linha);
-      consumoRecursos[idTarefaAtual - 1][i] = atoi(linha);
-    }
-  } while (strcmp(linha, "************************************************************************") != 0);
+  for (int i = 0; i < qtdRecursos; i++)
+  {
+    fscanf(arquivo, "%s\t", &linha);
+    recursoDisponivelAtual[i] = atoi(linha);
+  }
 }
 
 void ordenarPrecedencia()
@@ -202,7 +222,6 @@ bool verificarSeEstaContidoVetor(const int value, const int quantidade, const in
 
 void ordenarTarefasRecursos()
 {
-  
 }
 
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga)
