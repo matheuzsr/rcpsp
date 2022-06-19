@@ -7,8 +7,10 @@
 
 typedef struct tSolucao
 {
-    int tarefasTempoInicio[MAX_QTD_TAREFAS][2];
+    int tarefasStartTime[2][MAX_QTD_TAREFAS];
+    int qtdTarefas;
     int funObj;
+    int makespan;
 } Solucao;
 
 //
@@ -38,6 +40,11 @@ void getDuracaoTarefasEConsumoRecursos(FILE *arquivo);
 void getQuantidadeCadaRecurso(FILE *arquivo);
 void ordenarPrecedencia();
 void ordenarTarefasRecursos();
+
+// Métodos para ler e escrever solução
+Solucao solucaoLida;
+void lerSolucao(std::string arq);
+void escreverSolucao(Solucao &solucao ,std::string arq);
 
 // Metodos auxiliares
 /* Verifica se esta contido no Vetor. */

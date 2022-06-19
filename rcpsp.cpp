@@ -18,7 +18,9 @@ int main(int argc, char *argv[])
   int seed = 125442;
   srand(seed);
   lerDados("./instancias/j12060_7.sm");
-
+  
+  // lerSolucao("./solucao/j10.sol");
+  // escreverSolucao(solucaoLida, "./solucao/j10_2.sol");
   Solucao sol;
 #endif
   return 0;
@@ -298,4 +300,54 @@ void ordenarTarefasRecursos()
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga)
 {
   memcpy(&solucaoNova, &solucaoAntiga, sizeof(solucaoAntiga));
+}
+
+void lerSolucao(std::string arq)
+{
+  FILE *arquivo = fopen(arq.c_str(), "r");
+
+  fscanf(arquivo, "%s", &linha);
+  fscanf(arquivo, "%s", &linha);
+  solucaoLida.funObj = atoi(linha);
+
+  fscanf(arquivo, "%s", &linha);
+  fscanf(arquivo, "%s", &linha);
+  solucaoLida.makespan = atoi(linha);
+
+  fscanf(arquivo, "%s", &linha);
+  fscanf(arquivo, "%s", &linha);
+  fscanf(arquivo, "%s", &linha);
+  fscanf(arquivo, "%s", &linha);
+
+  int i = 0;
+  do
+  {
+    fscanf(arquivo, "%s", &linha);
+    solucaoLida.tarefasStartTime[0][i] = atoi(linha);
+    fscanf(arquivo, "%s", &linha);
+    solucaoLida.tarefasStartTime[1][i] = atoi(linha);
+    i++;
+  } while (fgetc(arquivo) != EOF);
+  solucaoLida.qtdTarefas = i - 1;
+}
+
+void escreverSolucao(Solucao &solucao, std::string arq)
+{
+  FILE *arquivo = fopen(arq.c_str(), "w");
+
+  fprintf(arquivo, "FO: ");
+  fprintf(arquivo, "%d\n", solucao.funObj);
+
+  fprintf(arquivo, "Makespan: ");
+  fprintf(arquivo, "%d\n", solucao.makespan);
+
+  fprintf(arquivo, "------------------\n");
+  fprintf(arquivo, "Job Start Time\n");
+
+  for (int i = 0; i < solucao.qtdTarefas; i++)
+  {
+    fprintf(arquivo, "%d %d\n",
+            solucao.tarefasStartTime[0][i],
+            solucao.tarefasStartTime[1][i]);
+  }
 }
