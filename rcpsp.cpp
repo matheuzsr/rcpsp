@@ -8,6 +8,8 @@
 #include <iostream>
 #include <fstream>
 
+// #define MODO_DEBUG = true;
+
 #define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
 
@@ -18,14 +20,16 @@ int main(int argc, char *argv[])
   int seed = 125442;
   srand(seed);
   lerDados("./instancias/j12060_7.sm");
-  
-  // lerSolucao("./solucao/j10.sol");
-  // escreverSolucao(solucaoLida, "./solucao/j10_2.sol");
+
   Solucao sol;
+  heuristicaConstrutiva(sol);
+  calcFO(sol);
+  escreverSolucao(sol, "./solucao/j12060_7.sol");
 #endif
   return 0;
 }
 
+// Leitura
 void lerDados(const string arq)
 {
   FILE *arquivo = fopen(arq.c_str(), "r");
@@ -35,10 +39,8 @@ void lerDados(const string arq)
   getDuracaoTarefasEConsumoRecursos(arquivo);
   getQuantidadeCadaRecurso(arquivo);
 
-  ordenarPrecedencia();
   fclose(arquivo);
 }
-
 void getQtdTarefas(FILE *arquivo)
 {
   do
@@ -137,6 +139,13 @@ void getQuantidadeCadaRecurso(FILE *arquivo)
   }
 }
 
+// Heuristica
+void heuristicaConstrutiva(Solucao &sol)
+{
+  ordenarPrecedencia();
+  ordenarTarefasRecursos();
+  setTarefasStartTimeSolucaoEMakespan(sol);
+}
 void ordenarPrecedencia()
 {
   RelacaoPrecedencia relacoesPrecedenciaOrdenado[MAX_QTD_TAREFAS];
@@ -208,13 +217,27 @@ void ordenarPrecedencia()
       }
     }
   }
+}
+bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[])
+{
+  for (int i = 0; i < quantidade; i++)
+  {
+    if (value == vetor[i])
+    {
+      return true;
+    }
+  }
 
+  return false;
+}
+void ordenarTarefasRecursos()
+{
   int tempoAtual = 0;
   bool sairWhile = true;
   while (sairWhile)
   {
     bool podeEntrar = false;
-    for (int i = 0; i < qtdTarefas - 1; i++)
+    for (int i = 0; i < qtdTarefas; i++)
     {
       int tarefaAtual = tarefasStartTime[0][i];
 
@@ -225,7 +248,9 @@ void ordenarPrecedencia()
         {
           recursoDisponivelAtual[j] = recursoDisponivelAtual[j] + consumoRecursos[tarefaAtual - 1][j];
         }
-        printf("\nEu (%d) SAI no tempo %d", tarefaAtual, tempoAtual);
+#ifdef MODO_DEBUG
+        printf("\nEu tarefa:(%d) SAI no tempo %d", tarefaAtual, tempoAtual);
+#endif
       }
 
       if (tarefasStartTime[1][i] == -1 && todosAnterioresOrdenadosJaEntraram(i))
@@ -252,21 +277,17 @@ void ordenarPrecedencia()
           {
             recursoDisponivelAtual[j] = recursoDisponivelAtual[j] - consumoRecursos[tarefaAtual - 1][j];
           }
-          printf("\nEu (%d) ENTREI no tempo %d", tarefaAtual, tempoAtual);
+#ifdef MODO_DEBUG
+          printf("\nEu tarefa:(%d) ENTREI no tempo %d", tarefaAtual, tempoAtual);
+#endif
         }
       }
     }
+
     tempoAtual++;
+    sairWhile = !todosAnterioresOrdenadosJaEntraram(qtdTarefas - 1);
   }
-
-  if (todosAnterioresOrdenadosJaEntraram(qtdTarefas))
-  {
-    sairWhile = false;
-  }
-
-  printf("Foi papai");
 }
-
 bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual)
 {
   for (int i = 0; i < indiceTarefaAtual; i++)
@@ -279,29 +300,54 @@ bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual)
 
   return true;
 }
-
-bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[])
+void setTarefasStartTimeSolucaoEMakespan(Solucao &sol)
 {
-  for (int i = 0; i < quantidade; i++)
+  int idUltimaTarefa = tarefasStartTime[0][qtdTarefas - 2];
+  int tempoUltimaTarefaReal = tarefasStartTime[1][qtdTarefas - 2];
+
+  // TODO: (Dúvida) Na ultima posição do array ordenado p/ precedencia estara sempre o time do fim da ultima tarefa?
+  tarefasStartTime[1][qtdTarefas - 1] = tempoUltimaTarefaReal + duracao[idUltimaTarefa - 1] - 1;
+
+  memcpy(&sol.tarefasStartTime, &tarefasStartTime, sizeof(tarefasStartTime));
+
+  int flag = 1;
+  int aux[2];
+
+  while (flag)
   {
-    if (value == vetor[i])
+    flag = 0;
+    for (int i = 0; i < qtdTarefas; i++)
     {
-      return true;
+      if (sol.tarefasStartTime[0][i] > sol.tarefasStartTime[0][i + 1] && sol.tarefasStartTime[0][i + 1] != -1)
+      {
+        flag = 1;
+        aux[0] = sol.tarefasStartTime[0][i];
+        aux[1] = sol.tarefasStartTime[1][i];
+
+        sol.tarefasStartTime[0][i] = sol.tarefasStartTime[0][i + 1];
+        sol.tarefasStartTime[1][i] = sol.tarefasStartTime[1][i + 1];
+
+        sol.tarefasStartTime[0][i + 1] = aux[0];
+        sol.tarefasStartTime[1][i + 1] = aux[1];
+      }
     }
   }
 
-  return false;
+  sol.qtdTarefas = qtdTarefas;
+  sol.makespan = tarefasStartTime[1][qtdTarefas - 1];
 }
 
-void ordenarTarefasRecursos()
+// Calculo FO
+void calcFO(Solucao &s)
 {
+  // TODO: Fazer as oenalizações necessárias e calcular a FO e o makespan
 }
 
+// Métodos auxiliares
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga)
 {
   memcpy(&solucaoNova, &solucaoAntiga, sizeof(solucaoAntiga));
 }
-
 void lerSolucao(std::string arq)
 {
   FILE *arquivo = fopen(arq.c_str(), "r");
@@ -330,7 +376,6 @@ void lerSolucao(std::string arq)
   } while (fgetc(arquivo) != EOF);
   solucaoLida.qtdTarefas = i - 1;
 }
-
 void escreverSolucao(Solucao &solucao, std::string arq)
 {
   FILE *arquivo = fopen(arq.c_str(), "w");

@@ -38,8 +38,12 @@ void getRelacoesPrecedencia(FILE *arquivo);
 void getQtdRecursos(FILE *arquivo);
 void getDuracaoTarefasEConsumoRecursos(FILE *arquivo);
 void getQuantidadeCadaRecurso(FILE *arquivo);
+
+// Heuristica construtiva
+void heuristicaConstrutiva(Solucao &sol);
 void ordenarPrecedencia();
 void ordenarTarefasRecursos();
+void setTarefasStartTimeSolucaoEMakespan(Solucao &sol);
 
 // Métodos para ler e escrever solução
 Solucao solucaoLida;
