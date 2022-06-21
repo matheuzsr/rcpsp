@@ -144,7 +144,7 @@ void heuristicaConstrutiva(Solucao &sol)
 {
   ordenarPrecedencia();
   ordenarTarefasRecursos();
-  setTarefasStartTimeSolucaoEMakespan(sol);
+  setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(sol);
 }
 void ordenarPrecedencia()
 {
@@ -197,22 +197,22 @@ void ordenarPrecedencia()
    */
   int tarefaAtualOrdenada = 0;
 
-  memset(&tarefasStartTime[0], -1, sizeof(tarefasStartTime[0]));
-  memset(&tarefasStartTime[1], -1, sizeof(tarefasStartTime[1]));
+  memset(&tarefasStartTimeOrdenadaPrecedencia[0], -1, sizeof(tarefasStartTimeOrdenadaPrecedencia[0]));
+  memset(&tarefasStartTimeOrdenadaPrecedencia[1], -1, sizeof(tarefasStartTimeOrdenadaPrecedencia[1]));
 
   for (int i = 0; i < qtdTarefas; i++)
   {
-    if (!verificarSeEstaContidoVetor(i + 1, qtdTarefas, tarefasStartTime[0]))
+    if (!verificarSeEstaContidoVetor(i + 1, qtdTarefas, tarefasStartTimeOrdenadaPrecedencia[0]))
     {
-      tarefasStartTime[0][tarefaAtualOrdenada] = i + 1;
+      tarefasStartTimeOrdenadaPrecedencia[0][tarefaAtualOrdenada] = i + 1;
       tarefaAtualOrdenada = tarefaAtualOrdenada + 1;
     }
 
     for (int j = 0; j < relacoesPrecedenciaOrdenado[i].qtdSucessores; j++)
     {
-      if (!verificarSeEstaContidoVetor(relacoesPrecedenciaOrdenado[i].sucessores[j], qtdTarefas, tarefasStartTime[0]))
+      if (!verificarSeEstaContidoVetor(relacoesPrecedenciaOrdenado[i].sucessores[j], qtdTarefas, tarefasStartTimeOrdenadaPrecedencia[0]))
       {
-        tarefasStartTime[0][tarefaAtualOrdenada] = relacoesPrecedenciaOrdenado[i].sucessores[j];
+        tarefasStartTimeOrdenadaPrecedencia[0][tarefaAtualOrdenada] = relacoesPrecedenciaOrdenado[i].sucessores[j];
         tarefaAtualOrdenada = tarefaAtualOrdenada + 1;
       }
     }
@@ -239,10 +239,10 @@ void ordenarTarefasRecursos()
     bool podeEntrar = false;
     for (int i = 0; i < qtdTarefas; i++)
     {
-      int tarefaAtual = tarefasStartTime[0][i];
+      int tarefaAtual = tarefasStartTimeOrdenadaPrecedencia[0][i];
 
       // maluco ta saindo aqui
-      if (tarefasStartTime[1][i] != -1 && (tarefasStartTime[1][i] + duracao[i]) == tempoAtual)
+      if (tarefasStartTimeOrdenadaPrecedencia[1][i] != -1 && (tarefasStartTimeOrdenadaPrecedencia[1][i] + duracao[i]) == tempoAtual)
       {
         for (int j = 0; j < qtdRecursos; j++)
         {
@@ -253,7 +253,7 @@ void ordenarTarefasRecursos()
 #endif
       }
 
-      if (tarefasStartTime[1][i] == -1 && todosAnterioresOrdenadosJaEntraram(i))
+      if (tarefasStartTimeOrdenadaPrecedencia[1][i] == -1 && todosAnterioresOrdenadosJaEntraram(i))
       {
         // maluco ta entrando aqui
         for (int j = 0; j < qtdRecursos; j++)
@@ -271,7 +271,7 @@ void ordenarTarefasRecursos()
 
         if (podeEntrar)
         {
-          tarefasStartTime[1][i] = tempoAtual;
+          tarefasStartTimeOrdenadaPrecedencia[1][i] = tempoAtual;
 
           for (int j = 0; j < qtdRecursos; j++)
           {
@@ -292,7 +292,7 @@ bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual)
 {
   for (int i = 0; i < indiceTarefaAtual; i++)
   {
-    if (tarefasStartTime[1][i] == -1)
+    if (tarefasStartTimeOrdenadaPrecedencia[1][i] == -1)
     {
       return false;
     }
@@ -300,15 +300,15 @@ bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual)
 
   return true;
 }
-void setTarefasStartTimeSolucaoEMakespan(Solucao &sol)
+void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol)
 {
-  int idUltimaTarefa = tarefasStartTime[0][qtdTarefas - 2];
-  int tempoUltimaTarefaReal = tarefasStartTime[1][qtdTarefas - 2];
+  int idUltimaTarefa = tarefasStartTimeOrdenadaPrecedencia[0][qtdTarefas - 2];
+  int tempoUltimaTarefaReal = tarefasStartTimeOrdenadaPrecedencia[1][qtdTarefas - 2];
 
   // TODO: (Dúvida) Na ultima posição do array ordenado p/ precedencia estara sempre o time do fim da ultima tarefa?
-  tarefasStartTime[1][qtdTarefas - 1] = tempoUltimaTarefaReal + duracao[idUltimaTarefa - 1] - 1;
+  tarefasStartTimeOrdenadaPrecedencia[1][qtdTarefas - 1] = tempoUltimaTarefaReal + duracao[idUltimaTarefa - 1] - 1;
 
-  memcpy(&sol.tarefasStartTime, &tarefasStartTime, sizeof(tarefasStartTime));
+  memcpy(&sol.tarefasStartTime, &tarefasStartTimeOrdenadaPrecedencia, sizeof(tarefasStartTimeOrdenadaPrecedencia));
 
   int flag = 1;
   int aux[2];
@@ -334,13 +334,12 @@ void setTarefasStartTimeSolucaoEMakespan(Solucao &sol)
   }
 
   sol.qtdTarefas = qtdTarefas;
-  sol.makespan = tarefasStartTime[1][qtdTarefas - 1];
+  sol.makespan = tarefasStartTimeOrdenadaPrecedencia[1][qtdTarefas - 1];
 }
 
 // Calculo FO
 void calcFO(Solucao &s)
 {
-  // TODO: Fazer as oenalizações necessárias e calcular a FO e o makespan
 }
 
 // Métodos auxiliares

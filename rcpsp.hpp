@@ -29,7 +29,7 @@ RelacaoPrecedencia relacoesPrecedencia[MAX_QTD_TAREFAS];
 int consumoRecursos[MAX_QTD_TAREFAS][MAX_QTD_RECURSO];
 
 // Preenchido após ordenação
-int tarefasStartTime[2][MAX_QTD_TAREFAS];
+int tarefasStartTimeOrdenadaPrecedencia[2][MAX_QTD_TAREFAS];
 int recursoDisponivelAtual[MAX_QTD_RECURSO];
 
 void lerDados(std::string arq);
@@ -43,7 +43,7 @@ void getQuantidadeCadaRecurso(FILE *arquivo);
 void heuristicaConstrutiva(Solucao &sol);
 void ordenarPrecedencia();
 void ordenarTarefasRecursos();
-void setTarefasStartTimeSolucaoEMakespan(Solucao &sol);
+void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol);
 
 // Métodos para ler e escrever solução
 Solucao solucaoLida;
