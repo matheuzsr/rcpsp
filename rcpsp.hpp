@@ -25,7 +25,11 @@ char linha[100];
 int qtdTarefas;
 int qtdRecursos;
 int duracao[MAX_QTD_TAREFAS];
+
+/* TODO: Substituir esse cara pela matriz de baixo */
 RelacaoPrecedencia relacoesPrecedencia[MAX_QTD_TAREFAS];
+int matrizRelacoesPrecedencia[MAX_QTD_TAREFAS][MAX_QTD_TAREFAS];
+
 int consumoRecursos[MAX_QTD_TAREFAS][MAX_QTD_RECURSO];
 
 // Preenchido após ordenação

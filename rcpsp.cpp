@@ -15,17 +15,12 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-#ifdef MODO_TESTE
-#else
-  int seed = 125442;
-  srand(seed);
   lerDados("./instancias/j12060_7.sm");
 
   Solucao sol;
   heuristicaConstrutiva(sol);
   calcFO(sol);
   escreverSolucao(sol, "./solucao/j12060_7.sol");
-#endif
   return 0;
 }
 
@@ -63,6 +58,11 @@ void getQtdRecursos(FILE *arquivo)
 }
 void getRelacoesPrecedencia(FILE *arquivo)
 {
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    memset(&matrizRelacoesPrecedencia[i], 0, sizeof(matrizRelacoesPrecedencia[i]));
+  }
+
   do
   {
     fscanf(arquivo, "%s", &linha);
@@ -84,8 +84,20 @@ void getRelacoesPrecedencia(FILE *arquivo)
     for (int j = 0; j < relacoesPrecedencia[i].qtdSucessores; j++)
     {
       fscanf(arquivo, "%s\t", &linha);
-      relacoesPrecedencia[i].sucessores[j] = atoi(linha);
+      int idSucessor = atoi(linha);
+      relacoesPrecedencia[i].sucessores[j] = idSucessor;
+
+      matrizRelacoesPrecedencia[i][idSucessor - 1] = 1;
     }
+  }
+
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    for (int j = 0; j < qtdTarefas; j++)
+    {
+      printf("%d  ", matrizRelacoesPrecedencia[j][i]);
+    }
+    printf("\n");
   }
 }
 void getDuracaoTarefasEConsumoRecursos(FILE *arquivo)
@@ -342,6 +354,12 @@ void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol)
 // Calculo FO
 void calcFO(Solucao &s)
 {
+  // Precedencia olhando a matriz
+  for (int i = 0; i < s.qtdTarefas; i++)
+  {
+    int idSucessor = s.tarefasStartTime[1][i]
+  }
+  // Estouro de Recurso de acordo com o tempo atual percorrer todos os tempos, percorrendo as posições dos tempos
 }
 
 // Métodos auxiliares
