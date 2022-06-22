@@ -90,6 +90,8 @@ void getRelacoesPrecedencia(FILE *arquivo)
 }
 void getDuracaoTarefasEConsumoRecursos(FILE *arquivo)
 {
+  memset(&duracao, -1, sizeof(duracao));
+
   do
   {
     fscanf(arquivo, "%s", &linha);
