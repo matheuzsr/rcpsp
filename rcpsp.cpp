@@ -357,7 +357,7 @@ void calcFO(Solucao &s)
   // Precedencia olhando a matriz
   for (int i = 0; i < s.qtdTarefas; i++)
   {
-    int idSucessor = s.tarefasStartTime[1][i]
+    int idSucessor = s.tarefasStartTime[1][i];
   }
   // Estouro de Recurso de acordo com o tempo atual percorrer todos os tempos, percorrendo as posições dos tempos
 }
