@@ -95,7 +95,7 @@ void getRelacoesPrecedencia(FILE *arquivo)
   {
     for (int j = 0; j < qtdTarefas; j++)
     {
-      printf("%d  ", matrizRelacoesPrecedencia[j][i]);
+      printf("%d  ", matrizRelacoesPrecedencia[i][j]);
     }
     printf("\n");
   }
