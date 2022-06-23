@@ -36,6 +36,10 @@ int consumoRecursos[MAX_QTD_TAREFAS][MAX_QTD_RECURSO];
 int tarefasStartTimeOrdenadaPrecedencia[2][MAX_QTD_TAREFAS];
 int recursoDisponivelAtual[MAX_QTD_RECURSO];
 
+
+// Variaveis calculo FO
+int tarefasStartTimeOrdenadaAposSolucao[2][MAX_QTD_TAREFAS];
+
 void lerDados(std::string arq);
 void getQtdTarefas(FILE *arquivo);
 void getRelacoesPrecedencia(FILE *arquivo);
@@ -52,14 +56,18 @@ void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol);
 // Métodos para ler e escrever solução
 Solucao solucaoLida;
 void lerSolucao(std::string arq);
-void escreverSolucao(Solucao &solucao ,std::string arq);
+void escreverSolucao(Solucao &solucao, std::string arq);
 
 // Metodos auxiliares
 /* Verifica se esta contido no Vetor. */
 bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual);
 bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[]);
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
+void ordenarSolucaoStartTime();
 
+// Metodos calculo FO
 void calcFO(Solucao &s);
+int calcularPenalizacaoEstouroRecurso(Solucao &s);
+int calcularPenalizacaoPrecedencia(Solucao &s);
 
 #endif // PMM_HPP_INCLUDED

@@ -21,6 +21,9 @@ int main(int argc, char *argv[])
   heuristicaConstrutiva(sol);
   calcFO(sol);
   escreverSolucao(sol, "./solucao/j12060_7.sol");
+
+  // lerSolucao("./solucao/j301_1.sol");
+  // calcFO(solucaoLida);
   return 0;
 }
 
@@ -89,15 +92,6 @@ void getRelacoesPrecedencia(FILE *arquivo)
 
       matrizRelacoesPrecedencia[i][idSucessor - 1] = 1;
     }
-  }
-
-  for (int i = 0; i < qtdTarefas; i++)
-  {
-    for (int j = 0; j < qtdTarefas; j++)
-    {
-      printf("%d  ", matrizRelacoesPrecedencia[i][j]);
-    }
-    printf("\n");
   }
 }
 void getDuracaoTarefasEConsumoRecursos(FILE *arquivo)
@@ -232,18 +226,6 @@ void ordenarPrecedencia()
     }
   }
 }
-bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[])
-{
-  for (int i = 0; i < quantidade; i++)
-  {
-    if (value == vetor[i])
-    {
-      return true;
-    }
-  }
-
-  return false;
-}
 void ordenarTarefasRecursos()
 {
   int tempoAtual = 0;
@@ -354,12 +336,67 @@ void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol)
 // Calculo FO
 void calcFO(Solucao &s)
 {
-  // Precedencia olhando a matriz
+  s.funObj = 0;
+  int penalizacaoPrecedencia = calcularPenalizacaoPrecedencia(s);
+  int penalizacaoEstouroRecurso = calcularPenalizacaoEstouroRecurso(s);
+
+  s.funObj = s.makespan + penalizacaoPrecedencia + penalizacaoEstouroRecurso;
+}
+
+int calcularPenalizacaoPrecedencia(Solucao &s)
+{
+  int penalizacaoPrecedencia = 0;
+
+  memcpy(&tarefasStartTimeOrdenadaAposSolucao[0], &s.tarefasStartTime[0], sizeof(s.tarefasStartTime[0]));
+  memcpy(&tarefasStartTimeOrdenadaAposSolucao[1], &s.tarefasStartTime[1], sizeof(s.tarefasStartTime[1]));
+  ordenarSolucaoStartTime();
+
   for (int i = 0; i < s.qtdTarefas; i++)
   {
-    int idSucessor = s.tarefasStartTime[1][i];
+    int idSucessor = tarefasStartTimeOrdenadaAposSolucao[0][i];
+
+    for (int j = 0; j < s.qtdTarefas; j++)
+    {
+      if (matrizRelacoesPrecedencia[j][idSucessor - 1] == 1 && !verificarSeEstaContidoVetor(j + 1, i + 1, tarefasStartTimeOrdenadaAposSolucao[0]))
+      {
+        penalizacaoPrecedencia += 1;
+      }
+    }
   }
+
+  return penalizacaoPrecedencia;
+}
+int calcularPenalizacaoEstouroRecurso(Solucao &s)
+{
   // Estouro de Recurso de acordo com o tempo atual percorrer todos os tempos, percorrendo as posições dos tempos
+  int penalizacaoEstouroRecurso = 0;
+
+  return penalizacaoEstouroRecurso;
+}
+
+void ordenarSolucaoStartTime()
+{
+  int flag = 1;
+  int aux0, aux1;
+  while (flag)
+  {
+    flag = 0;
+    for (int i = 0; i < qtdTarefas; i++)
+    {
+      if (tarefasStartTimeOrdenadaAposSolucao[1][i] > tarefasStartTimeOrdenadaAposSolucao[1][i + 1] && tarefasStartTimeOrdenadaAposSolucao[1][i + 1] != -1)
+      {
+        flag = 1;
+        aux0 = tarefasStartTimeOrdenadaAposSolucao[0][i];
+        aux1 = tarefasStartTimeOrdenadaAposSolucao[1][i];
+
+        tarefasStartTimeOrdenadaAposSolucao[0][i] = tarefasStartTimeOrdenadaAposSolucao[0][i + 1];
+        tarefasStartTimeOrdenadaAposSolucao[1][i] = tarefasStartTimeOrdenadaAposSolucao[1][i + 1];
+
+        tarefasStartTimeOrdenadaAposSolucao[0][i + 1] = aux0;
+        tarefasStartTimeOrdenadaAposSolucao[1][i + 1] = aux1;
+      }
+    }
+  }
 }
 
 // Métodos auxiliares
@@ -414,4 +451,16 @@ void escreverSolucao(Solucao &solucao, std::string arq)
             solucao.tarefasStartTime[0][i],
             solucao.tarefasStartTime[1][i]);
   }
+}
+bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[])
+{
+  for (int i = 0; i < quantidade; i++)
+  {
+    if (value == vetor[i])
+    {
+      return true;
+    }
+  }
+
+  return false;
 }

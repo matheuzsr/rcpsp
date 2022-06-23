@@ -1,4 +1,4 @@
-FO: 32767
+FO: 24
 Makespan: 24
 ------------------
 Job Start Time
