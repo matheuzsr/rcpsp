@@ -15,15 +15,16 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-  lerDados("./instancias/j12060_7.sm");
-
   Solucao sol;
+
+  lerDados("./instancias/j12060_7.sm");
   heuristicaConstrutiva(sol);
+
   calcFO(sol);
   escreverSolucao(sol, "./solucao/j12060_7.sol");
 
   // lerSolucao("./solucao/j301_1.sol");
-  // calcFO(solucaoLida);
+  // calcFO(sol);
   return 0;
 }
 
@@ -143,7 +144,7 @@ void getQuantidadeCadaRecurso(FILE *arquivo)
   for (int i = 0; i < qtdRecursos; i++)
   {
     fscanf(arquivo, "%s\t", &linha);
-    recursoDisponivelAtual[i] = atoi(linha);
+    recursoDisponivel[i] = atoi(linha);
   }
 }
 
@@ -230,6 +231,10 @@ void ordenarTarefasRecursos()
 {
   int tempoAtual = 0;
   bool sairWhile = true;
+
+  int recursoDisponivelAtual[qtdTarefas];
+  memcpy(&recursoDisponivelAtual, &recursoDisponivel, sizeof(recursoDisponivel));
+
   while (sairWhile)
   {
     bool podeEntrar = false;
@@ -340,7 +345,7 @@ void calcFO(Solucao &s)
   int penalizacaoPrecedencia = calcularPenalizacaoPrecedencia(s);
   int penalizacaoEstouroRecurso = calcularPenalizacaoEstouroRecurso(s);
 
-  s.funObj = s.makespan + penalizacaoPrecedencia + penalizacaoEstouroRecurso;
+  s.funObj = s.makespan + (PESO_PENALIZACAO_PRECEDENCIA * penalizacaoPrecedencia) + (PESO_PENALIZACAO_RECURSOS * penalizacaoEstouroRecurso);
 }
 
 int calcularPenalizacaoPrecedencia(Solucao &s)
@@ -368,6 +373,26 @@ int calcularPenalizacaoPrecedencia(Solucao &s)
 }
 int calcularPenalizacaoEstouroRecurso(Solucao &s)
 {
+  int recursoDisponivelAtual[qtdTarefas];
+  memcpy(&recursoDisponivelAtual, &recursoDisponivel, sizeof(recursoDisponivel));
+
+
+  int tempoAtual = 0;
+  int tempoFinal = s.tarefasStartTime[1][s.qtdTarefas - 1];
+
+  while (tempoAtual == tempoFinal)
+  {
+    for (int i = 0; i < s.qtdTarefas - 1; i++)
+    {
+      if (s.tarefasStartTime[1][i] == tempoAtual)
+      {
+        int idTarefaAtual = s.tarefasStartTime[0][i];
+      }
+    }
+
+    tempoAtual++;
+  }
+
   // Estouro de Recurso de acordo com o tempo atual percorrer todos os tempos, percorrendo as posições dos tempos
   int penalizacaoEstouroRecurso = 0;
 

@@ -3,6 +3,9 @@
 
 #define MAX_QTD_RECURSO 10
 #define MAX_QTD_TAREFAS 200
+#define PESO_PENALIZACAO_PRECEDENCIA 1000
+#define PESO_PENALIZACAO_RECURSOS 100
+
 #include <string>
 
 typedef struct tSolucao
@@ -34,8 +37,7 @@ int consumoRecursos[MAX_QTD_TAREFAS][MAX_QTD_RECURSO];
 
 // Preenchido após ordenação
 int tarefasStartTimeOrdenadaPrecedencia[2][MAX_QTD_TAREFAS];
-int recursoDisponivelAtual[MAX_QTD_RECURSO];
-
+int recursoDisponivel[MAX_QTD_RECURSO];
 
 // Variaveis calculo FO
 int tarefasStartTimeOrdenadaAposSolucao[2][MAX_QTD_TAREFAS];
