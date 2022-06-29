@@ -8,7 +8,11 @@
 #include <iostream>
 #include <fstream>
 
-// #define MODO_DEBUG = true;
+#include <string.h>
+
+
+//#define MODO_DEBUG = true;
+
 
 #define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
@@ -21,10 +25,10 @@ int main(int argc, char *argv[])
   heuristicaConstrutiva(sol);
 
   calcFO(sol);
-  escreverSolucao(sol, "./solucao/j12060_7.sol");
+  //escreverSolucao(sol, "./solucao/j12060_7.sol");
 
-  // lerSolucao("./solucao/j301_1.sol");
-  // calcFO(sol);
+   lerSolucao("./solucao/j12060_7.sol");
+   calcFO(sol);
   return 0;
 }
 
@@ -368,33 +372,86 @@ int calcularPenalizacaoPrecedencia(Solucao &s)
       }
     }
   }
+ printf("\n Penaliza precedencia: %d", penalizacaoPrecedencia);
 
   return penalizacaoPrecedencia;
 }
+
+//*************************************************************************** Penalizando recursos
 int calcularPenalizacaoEstouroRecurso(Solucao &s)
 {
   int recursoDisponivelAtual[qtdTarefas];
   memcpy(&recursoDisponivelAtual, &recursoDisponivel, sizeof(recursoDisponivel));
 
-
   int tempoAtual = 0;
   int tempoFinal = s.tarefasStartTime[1][s.qtdTarefas - 1];
+  int matrizExecutandoNoTempo[qtdTarefas][tempoFinal];
+  int penalizacaoEstouroRecurso = 0;
 
-  while (tempoAtual == tempoFinal)
+  //zerando a matriz
+  for (int i = 0; i < qtdTarefas; i++)
   {
-    for (int i = 0; i < s.qtdTarefas - 1; i++)
-    {
-      if (s.tarefasStartTime[1][i] == tempoAtual)
-      {
-        int idTarefaAtual = s.tarefasStartTime[0][i];
-      }
-    }
-
-    tempoAtual++;
+      for(int j = 0; j < tempoFinal; i++)
+    memset(&matrizExecutandoNoTempo[i], 0, sizeof(matrizExecutandoNoTempo[i]));
   }
 
-  // Estouro de Recurso de acordo com o tempo atual percorrer todos os tempos, percorrendo as posições dos tempos
-  int penalizacaoEstouroRecurso = 0;
+  for (int j = 0; j < tempoFinal - 1; j++) //percorrendo o tempo
+    {
+    //percorrendo a matriz e preenchendo
+        for (int i = 0; i < s.qtdTarefas - 1; i++)
+        {
+            for (int j = 0; j < tempoFinal - 1; j++)
+            {
+                if (s.tarefasStartTime[1][i] = tempoAtual)
+                {
+                    matrizExecutandoNoTempo[i][j] == 1;
+                    for (int j = 0; j < duracao[i]-1; j++)
+                    {
+                        matrizExecutandoNoTempo[i][j] == 1;
+                    }
+                }
+            }
+        }
+
+        tempoAtual++;
+    }
+
+    printf("\n");
+    printf("Matriz de tarefas executando por tempo\n");
+    //imprimindo matriz
+    for (int i = 0; i < s.qtdTarefas - 1; i++)
+        {
+            for (int j = 0; j < tempoFinal - 1; j++)
+            {
+                printf("%d",matrizExecutandoNoTempo[i][j]);
+            }
+            printf("\n");
+        }
+
+
+    //percorrendo a matriz somando os recusos
+    int somaRecursosUsando =0;
+    int diminuiPenaliza =0;
+       for (int j = 0; j < tempoFinal - 1; j++)
+        {
+             for (int i = 0; i < s.qtdTarefas - 1; i++)
+            {
+                if (matrizExecutandoNoTempo[i][j] = 1)//quer dizer que tem tarefa usando o recurso
+                {
+                     //verificar quantos recursos minha tarefa i usa
+                     somaRecursosUsando = somaRecursosUsando + consumoRecursos[i][MAX_QTD_RECURSO]; //verificar
+                }
+
+            }
+            //dimunir o recurso da tarefa do meu recurso disponivel
+            
+            diminuiPenaliza = (somaRecursosUsando - recursoDisponivelAtual[qtdRecursos]); // verificar
+            //guardar o resultado = penalização
+        }
+
+        penalizacaoEstouroRecurso = diminuiPenaliza;
+
+ printf("\n Penaliza:(%d)", penalizacaoEstouroRecurso);
 
   return penalizacaoEstouroRecurso;
 }
