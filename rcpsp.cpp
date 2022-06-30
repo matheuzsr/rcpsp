@@ -10,7 +10,7 @@
 
 #include <string.h>
 
-//#define MODO_DEBUG = true;
+// #define MODO_DEBUG = true;
 
 #define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
@@ -24,20 +24,19 @@ int main(int argc, char *argv[])
    * Heristica construtiva
    * Calcular FO
    */
-  // lerDados("./instancias/j12060_7.sm");
-  // heuristicaConstrutiva(sol);
-  // calcFO(sol);
-  // escreverSolucao(sol, "./solucao/j12060_7.sol");
-
+  lerDados("./instancias/j301_1.sm");
+  heuristicaConstrutiva(sol);
+  calcFO(sol);
+  escreverSolucao(sol, "./solucao/j301_1_minha.sol");
 
   /*
    * Ler dados
    * Ler solução
    * Calcular FO
    */
-  lerDados("./instancias/j12060_7.sm");
-  lerSolucao("./solucao/j12060_7.sol");
-  calcFO(solucaoLida);
+  // lerDados("./instancias/j10.sm");
+  // lerSolucao("./solucao/j10.sol");
+  // calcFO(solucaoLida);
   return 0;
 }
 
@@ -258,7 +257,7 @@ void ordenarTarefasRecursos()
           recursoDisponivelAtual[j] = recursoDisponivelAtual[j] + consumoRecursos[tarefaAtual - 1][j];
         }
 #ifdef MODO_DEBUG
-        printf("\nEu tarefa:(%d) SAI no tempo %d", tarefaAtual, tempoAtual);
+        printf("Eu tarefa:(%d) SAI no tempo %d\n", tarefaAtual, tempoAtual);
 #endif
       }
 
@@ -267,7 +266,7 @@ void ordenarTarefasRecursos()
         // maluco ta entrando aqui
         for (int j = 0; j < qtdRecursos; j++)
         {
-          if (consumoRecursos[tarefaAtual - 1][j] < recursoDisponivelAtual[j])
+          if (consumoRecursos[tarefaAtual - 1][j] <= recursoDisponivelAtual[j])
           {
             podeEntrar = true;
           }
@@ -287,7 +286,7 @@ void ordenarTarefasRecursos()
             recursoDisponivelAtual[j] = recursoDisponivelAtual[j] - consumoRecursos[tarefaAtual - 1][j];
           }
 #ifdef MODO_DEBUG
-          printf("\nEu tarefa:(%d) ENTREI no tempo %d", tarefaAtual, tempoAtual);
+          printf("Eu tarefa:(%d) ENTREI no tempo %d\n", tarefaAtual, tempoAtual);
 #endif
         }
       }
@@ -363,19 +362,28 @@ int calcularPenalizacaoPrecedencia(Solucao &s)
   memcpy(&tarefasStartTimeOrdenadaAposSolucao[1], &s.tarefasStartTime[1], sizeof(s.tarefasStartTime[1]));
   ordenarSolucaoStartTime();
 
-  for (int i = 0; i < s.qtdTarefas; i++)
+  for (int i = 1; i < s.qtdTarefas - 1; i++)
   {
     int idSucessor = tarefasStartTimeOrdenadaAposSolucao[0][i];
 
-    for (int j = 0; j < s.qtdTarefas; j++)
+    for (int j = 2; j < s.qtdTarefas; j++)
     {
-      if (matrizRelacoesPrecedencia[j][idSucessor - 1] == 1 && !verificarSeEstaContidoVetor(j + 1, i + 1, tarefasStartTimeOrdenadaAposSolucao[0]))
+      int duracaoPredecessor = duracao[j - 1];
+      int tempoStartTimePredecessor = s.tarefasStartTime[1][j - 1];
+      int tempoStartTimeSucessor = s.tarefasStartTime[1][idSucessor - 1];
+
+      bool jEhPredecessor = matrizRelacoesPrecedencia[j - 1][idSucessor - 1] == 1;
+      bool predecessorEntrandoDepois = (tempoStartTimePredecessor + duracaoPredecessor) > tempoStartTimeSucessor;
+
+      if (jEhPredecessor && predecessorEntrandoDepois)
       {
         penalizacaoPrecedencia += 1;
+#ifdef MODO_DEBUG
+        printf("Eu tarefa (%d) ENTREI antes da hora, devia entrado depois da %d\n", j + 1, idSucessor);
+#endif
       }
     }
   }
-  printf("\n Penaliza precedencia: %d", penalizacaoPrecedencia);
 
   return penalizacaoPrecedencia;
 }
