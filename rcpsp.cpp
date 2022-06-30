@@ -11,6 +11,7 @@
 #include <string.h>
 
 // #define MODO_DEBUG = true;
+#define METRICAS_TRABALHO_1 = true;
 
 #define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
@@ -19,25 +20,76 @@ int main(int argc, char *argv[])
 {
   Solucao sol;
 
-  /*
-   *  Ler dados
-   * Heristica construtiva
-   * Calcular FO
-   */
-  lerDados("./instancias/j301_1.sm");
+  string metodo = "heuristicaConstrutiva";
+  int vezes = 1000;
+  if (argc > 1)
+  {
+    metodo = argv[1];
+    vezes = stoi(argv[2]);
+  }
+  gerarMetricasTrabalho1(sol, "heuristicaConstrutiva", vezes);
+
+  // gerarMetricasTrabalho1(sol, "heuristicaConstrutiva", 1000);
+  // gerarMetricasTrabalho1(sol, "calcFO", 1000);
+
+  return 0;
+}
+
+void gerarMetricasTrabalho1(Solucao &sol, string metodo, const int vezes)
+{
+  clock_t h;
+  double tempoGasto;
+
+  h = clock();
+
+  if (vezes == 1)
+  {
+    lerDados("./instancias/j12060_7.sm");
+    heuristicaConstrutiva(sol);
+    calcFO(sol);
+  }
+  else
+  {
+    lerDados("./instancias/j12060_7.sm");
+    heuristicaConstrutiva(sol);
+    calcFO(sol);
+
+    if (metodo == "heuristicaConstrutiva")
+    {
+      for (int i = 0; i < vezes; i++)
+        heuristicaConstrutiva(sol);
+    }
+
+    if (metodo == "calcFO")
+    {
+      // Ja chamo um calcFO la em cima por isso o - 1
+      for (int i = 0; i < (vezes - 1); i++)
+        calcFO(sol);
+    }
+  }
+
+  h = clock() - h;
+
+  tempoGasto = (double)h / CLOCKS_PER_SEC;
+  printf("Metodo: %s |  Qtd vezes: %d |  Tempo gasto: %.5fs \n", metodo.c_str(), vezes, tempoGasto);
+  // escreverSolucao(sol, "./solucao/j12060_7_minha.sol");
+}
+
+/* lê dados, lê solução e calcula FO */
+void gerarSolucaoECalcularFO(Solucao &sol)
+{
+  lerDados("./instancias/j12060_7.sm");
   heuristicaConstrutiva(sol);
   calcFO(sol);
-  escreverSolucao(sol, "./solucao/j301_1_minha.sol");
+  escreverSolucao(sol, "./solucao/j12060_7_minha.sol");
+}
 
-  /*
-   * Ler dados
-   * Ler solução
-   * Calcular FO
-   */
-  // lerDados("./instancias/j10.sm");
-  // lerSolucao("./solucao/j10.sol");
-  // calcFO(solucaoLida);
-  return 0;
+/* lê dados, heristica construtiva e calcula FO e RETORNA O conteudo lido em `solucaoLida` */
+void calcularFOSolucaoLida()
+{
+  lerDados("./instancias/j10.sm");
+  lerSolucao("./solucao/j10.sol");
+  calcFO(solucaoLida);
 }
 
 // Leitura
@@ -394,7 +446,7 @@ int calcularPenalizacaoEstouroRecurso(Solucao &s)
   memcpy(&recursoDisponivelAtual, &recursoDisponivel, sizeof(recursoDisponivel));
 
   int tempoAtual = 0;
-  int tempoFinal = s.makespan - 1;
+  int tempoFinal = s.tarefasStartTime[1][qtdTarefas - 1];
   int matrizExecutandoNoTempo[tempoFinal][qtdTarefas];
   int penalizacaoEstouroRecurso = 0;
 

@@ -62,6 +62,12 @@ void escreverSolucao(Solucao &solucao, std::string arq);
 
 // Metodos auxiliares
 /* Verifica se esta contido no Vetor. */
+void gerarSolucaoECalcularFO(Solucao &sol);
+void calcularFOSolucaoLida();
+
+/* metodo: calcFO | heuristicaConstrutiva */
+void gerarMetricasTrabalho1(Solucao &sol, std::string metodo, const int vezes);
+
 bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual);
 bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[]);
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
