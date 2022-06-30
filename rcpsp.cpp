@@ -10,9 +10,7 @@
 
 #include <string.h>
 
-
 //#define MODO_DEBUG = true;
-
 
 #define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
@@ -21,14 +19,25 @@ int main(int argc, char *argv[])
 {
   Solucao sol;
 
+  /*
+   *  Ler dados
+   * Heristica construtiva
+   * Calcular FO
+   */
+  // lerDados("./instancias/j12060_7.sm");
+  // heuristicaConstrutiva(sol);
+  // calcFO(sol);
+  // escreverSolucao(sol, "./solucao/j12060_7.sol");
+
+
+  /*
+   * Ler dados
+   * Ler solução
+   * Calcular FO
+   */
   lerDados("./instancias/j12060_7.sm");
-  heuristicaConstrutiva(sol);
-
-  calcFO(sol);
-  //escreverSolucao(sol, "./solucao/j12060_7.sol");
-
-   lerSolucao("./solucao/j12060_7.sol");
-   calcFO(sol);
+  lerSolucao("./solucao/j12060_7.sol");
+  calcFO(solucaoLida);
   return 0;
 }
 
@@ -203,11 +212,6 @@ void ordenarPrecedencia()
     }
   }
 
-  /*
-   * TODO:Falta finalizar a inserção do dado lido na matriz, [tarefa][recursos]
-   * de maneira sequencial
-   * após isso será inciada as que inciam no mesmo tempo
-   */
   int tarefaAtualOrdenada = 0;
 
   memset(&tarefasStartTimeOrdenadaPrecedencia[0], -1, sizeof(tarefasStartTimeOrdenadaPrecedencia[0]));
@@ -342,7 +346,6 @@ void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol)
   sol.makespan = tarefasStartTimeOrdenadaPrecedencia[1][qtdTarefas - 1];
 }
 
-// Calculo FO
 void calcFO(Solucao &s)
 {
   s.funObj = 0;
@@ -372,86 +375,70 @@ int calcularPenalizacaoPrecedencia(Solucao &s)
       }
     }
   }
- printf("\n Penaliza precedencia: %d", penalizacaoPrecedencia);
+  printf("\n Penaliza precedencia: %d", penalizacaoPrecedencia);
 
   return penalizacaoPrecedencia;
 }
 
-//*************************************************************************** Penalizando recursos
 int calcularPenalizacaoEstouroRecurso(Solucao &s)
 {
   int recursoDisponivelAtual[qtdTarefas];
   memcpy(&recursoDisponivelAtual, &recursoDisponivel, sizeof(recursoDisponivel));
 
   int tempoAtual = 0;
-  int tempoFinal = s.tarefasStartTime[1][s.qtdTarefas - 1];
-  int matrizExecutandoNoTempo[qtdTarefas][tempoFinal];
+  int tempoFinal = s.makespan - 1;
+  int matrizExecutandoNoTempo[tempoFinal][qtdTarefas];
   int penalizacaoEstouroRecurso = 0;
 
-  //zerando a matriz
-  for (int i = 0; i < qtdTarefas; i++)
+  // zerando a matriz
+  for (int i = 0; i < tempoFinal; i++)
   {
-      for(int j = 0; j < tempoFinal; i++)
     memset(&matrizExecutandoNoTempo[i], 0, sizeof(matrizExecutandoNoTempo[i]));
   }
 
-  for (int j = 0; j < tempoFinal - 1; j++) //percorrendo o tempo
+  while (tempoAtual < tempoFinal)
+  {
+    for (int tarefaAtual = 0; tarefaAtual < qtdTarefas; tarefaAtual++)
     {
-    //percorrendo a matriz e preenchendo
-        for (int i = 0; i < s.qtdTarefas - 1; i++)
-        {
-            for (int j = 0; j < tempoFinal - 1; j++)
-            {
-                if (s.tarefasStartTime[1][i] = tempoAtual)
-                {
-                    matrizExecutandoNoTempo[i][j] == 1;
-                    for (int j = 0; j < duracao[i]-1; j++)
-                    {
-                        matrizExecutandoNoTempo[i][j] == 1;
-                    }
-                }
-            }
-        }
+      if (s.tarefasStartTime[1][tarefaAtual] == tempoAtual)
+      {
+        matrizExecutandoNoTempo[tempoAtual][tarefaAtual] = 1;
 
-        tempoAtual++;
+        for (int tempoExecutando = tempoAtual + 1; tempoExecutando < (tempoAtual + duracao[tarefaAtual]); tempoExecutando++)
+        {
+          matrizExecutandoNoTempo[tempoExecutando][tarefaAtual] = 1;
+        }
+      }
+    }
+    tempoAtual++;
+  }
+
+  int somaRecursosUsando[qtdRecursos];
+  int diminuiPenaliza = 0;
+
+  for (int tempAtual = 0; tempAtual < tempoFinal - 1; tempAtual++)
+  {
+    memset(&somaRecursosUsando, 0, sizeof(somaRecursosUsando));
+
+    for (int tarfAtual = 0; tarfAtual < s.qtdTarefas - 1; tarfAtual++)
+    {
+      if (matrizExecutandoNoTempo[tempAtual][tarfAtual] == 1)
+      {
+        for (int i = 0; i < qtdRecursos; i++)
+        {
+          somaRecursosUsando[i] = consumoRecursos[tarfAtual][i] + somaRecursosUsando[i];
+        }
+      }
     }
 
-    printf("\n");
-    printf("Matriz de tarefas executando por tempo\n");
-    //imprimindo matriz
-    for (int i = 0; i < s.qtdTarefas - 1; i++)
-        {
-            for (int j = 0; j < tempoFinal - 1; j++)
-            {
-                printf("%d",matrizExecutandoNoTempo[i][j]);
-            }
-            printf("\n");
-        }
-
-
-    //percorrendo a matriz somando os recusos
-    int somaRecursosUsando =0;
-    int diminuiPenaliza =0;
-       for (int j = 0; j < tempoFinal - 1; j++)
-        {
-             for (int i = 0; i < s.qtdTarefas - 1; i++)
-            {
-                if (matrizExecutandoNoTempo[i][j] = 1)//quer dizer que tem tarefa usando o recurso
-                {
-                     //verificar quantos recursos minha tarefa i usa
-                     somaRecursosUsando = somaRecursosUsando + consumoRecursos[i][MAX_QTD_RECURSO]; //verificar
-                }
-
-            }
-            //dimunir o recurso da tarefa do meu recurso disponivel
-            
-            diminuiPenaliza = (somaRecursosUsando - recursoDisponivelAtual[qtdRecursos]); // verificar
-            //guardar o resultado = penalização
-        }
-
-        penalizacaoEstouroRecurso = diminuiPenaliza;
-
- printf("\n Penaliza:(%d)", penalizacaoEstouroRecurso);
+    for (int i = 0; i < qtdRecursos; i++)
+    {
+      if (somaRecursosUsando[i] > recursoDisponivel[i])
+      {
+        penalizacaoEstouroRecurso = (somaRecursosUsando[i] - recursoDisponivel[i]) + penalizacaoEstouroRecurso;
+      }
+    }
+  }
 
   return penalizacaoEstouroRecurso;
 }
