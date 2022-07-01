@@ -19,60 +19,44 @@ using namespace std;
 int main(int argc, char *argv[])
 {
   Solucao sol;
-
-  string metodo = "heuristicaConstrutiva";
-  int vezes = 1000;
-  if (argc > 1)
-  {
-    metodo = argv[1];
-    vezes = stoi(argv[2]);
-  }
-  gerarMetricasTrabalho1(sol, "heuristicaConstrutiva", vezes);
-
-  // gerarMetricasTrabalho1(sol, "heuristicaConstrutiva", 1000);
-  // gerarMetricasTrabalho1(sol, "calcFO", 1000);
+  gerarMetricasTrabalho1(sol);
 
   return 0;
 }
 
-void gerarMetricasTrabalho1(Solucao &sol, string metodo, const int vezes)
+void gerarMetricasTrabalho1(Solucao &sol)
 {
   clock_t h;
+  clock_t hUmaVez;
   double tempoGasto;
 
   h = clock();
+  /*  Calc FO  1 X */
 
-  if (vezes == 1)
+  /*  Solucao inicial 1000 X */
+  // int vezes = 1000;
+  // lerDados("./instancias/j12060_7.sm");
+  // heuristicaConstrutiva(sol);
+
+  /*  Calc FO  1 X e 1000 X */
+  int vezes = 1000;
+  lerDados("./instancias/j12060_7.sm");
+  heuristicaConstrutiva(sol);
+  for (int i = 0; i < vezes; i++)
   {
-    lerDados("./instancias/j12060_7.sm");
-    heuristicaConstrutiva(sol);
     calcFO(sol);
-  }
-  else
-  {
-    lerDados("./instancias/j12060_7.sm");
-    heuristicaConstrutiva(sol);
-    calcFO(sol);
-
-    if (metodo == "heuristicaConstrutiva")
+    if (i == 0)
     {
-      for (int i = 0; i < vezes; i++)
-        heuristicaConstrutiva(sol);
-    }
-
-    if (metodo == "calcFO")
-    {
-      // Ja chamo um calcFO la em cima por isso o - 1
-      for (int i = 0; i < (vezes - 1); i++)
-        calcFO(sol);
+      hUmaVez = clock() - h;
+      tempoGasto = (double)hUmaVez / CLOCKS_PER_SEC;
+      printf("Qtd vezes: %d | FO: %d | Tempo gasto: %.5fs \n", 1, sol.funObj, tempoGasto);
     }
   }
 
   h = clock() - h;
 
   tempoGasto = (double)h / CLOCKS_PER_SEC;
-  printf("Metodo: %s |  Qtd vezes: %d |  Tempo gasto: %.5fs \n", metodo.c_str(), vezes, tempoGasto);
-  // escreverSolucao(sol, "./solucao/j12060_7_minha.sol");
+  printf("Qtd vezes: %d | FO: %d | Tempo gasto: %.5fs \n", vezes, sol.funObj, tempoGasto);
 }
 
 /* lê dados, lê solução e calcula FO */

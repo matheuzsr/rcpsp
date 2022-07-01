@@ -65,8 +65,7 @@ void escreverSolucao(Solucao &solucao, std::string arq);
 void gerarSolucaoECalcularFO(Solucao &sol);
 void calcularFOSolucaoLida();
 
-/* metodo: calcFO | heuristicaConstrutiva */
-void gerarMetricasTrabalho1(Solucao &sol, std::string metodo, const int vezes);
+void gerarMetricasTrabalho1(Solucao &sol);
 
 bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual);
 bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[]);
