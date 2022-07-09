@@ -26,7 +26,7 @@ ifeq ($(OPT), off)
 	USER_FLAGS += -ggdb3 -fexceptions -fno-omit-frame-pointer \
 		-fno-optimize-sibling-calls -fno-inline
 else
-	USER_FLAGS += -O3 -fomit-frame-pointer -funroll-loops
+	USER_FLAGS += -fomit-frame-pointer -funroll-loops
 	ifeq ($(CXX), g++)
 		USER_FLAGS += -ftracer -fpeel-loops -fprefetch-loop-arrays
 	endif
