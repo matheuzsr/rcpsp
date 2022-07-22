@@ -55,6 +55,12 @@ void ordenarPrecedencia();
 void ordenarTarefasRecursos();
 void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol);
 
+
+// Meta heuristica - Grasp
+void heuristicaGrasp(Solucao solGrasp);
+void heuristicaAleatoria(Solucao sol);
+void buscaLocal (Solucao sol);
+
 // Métodos para ler e escrever solução
 Solucao solucaoLida;
 void lerSolucao(std::string arq);
@@ -66,14 +72,16 @@ void gerarSolucaoECalcularFO(Solucao &sol);
 void calcularFOSolucaoLida();
 
 void gerarMetricasTrabalho1(Solucao &sol);
-
+void gerarMetricasTrabalho2(Solucao &sol);
 bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual);
 bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[]);
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
 void ordenarSolucaoStartTime();
 
+
 // Metodos calculo FO
 void calcFO(Solucao &s);
+void calcFOSemPenalizacao(Solucao &s);
 int calcularPenalizacaoEstouroRecurso(Solucao &s);
 int calcularPenalizacaoPrecedencia(Solucao &s);
 

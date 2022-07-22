@@ -11,6 +11,7 @@
 #include <string.h>
 
 // #define MODO_DEBUG = true;
+#define SEMENTE_ALEATORIA = true;
 #define METRICAS_TRABALHO_1 = true;
 
 #define MAX(X, Y) ((X > Y) ? X : Y)
@@ -18,10 +19,21 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+#ifdef SEMENTE_ALEATORIA
+  int seed = 10;
+  srand(seed);
+#endif
+
   Solucao sol;
-  gerarMetricasTrabalho1(sol);
+  gerarMetricasTrabalho2(sol);
 
   return 0;
+}
+
+void gerarMetricasTrabalho2(Solucao &sol)
+{
+  lerDados("./instancias/j10.sm");
+  heuristicaGrasp(sol);
 }
 
 void gerarMetricasTrabalho1(Solucao &sol)
@@ -62,7 +74,7 @@ void gerarMetricasTrabalho1(Solucao &sol)
 /* lê dados, lê solução e calcula FO */
 void gerarSolucaoECalcularFO(Solucao &sol)
 {
-  lerDados("./instancias/j12060_7.sm");
+  lerDados("./instancias/j10.sm");
   heuristicaConstrutiva(sol);
   calcFO(sol);
   escreverSolucao(sol, "./solucao/j12060_7_minha.sol");
@@ -381,6 +393,90 @@ void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol)
   sol.makespan = tarefasStartTimeOrdenadaPrecedencia[1][qtdTarefas - 1];
 }
 
+// Meta heuristica - Grasp
+void heuristicaGrasp(Solucao solGrasp)
+{
+  /* Busca local */
+  // Pegar do final para o começo, e vendo onde é que ele pode entrar sem violar nada
+  // (precedencia e recurso)
+  // e recalcular
+
+  //
+
+  Solucao melhorSolucaoConhecida;
+  melhorSolucaoConhecida.funObj = 2147483646;
+
+  int maxTempo = 100;
+  int tempo = 0;
+  while (tempo < maxTempo)
+  {
+    Solucao solucaoAtual;
+    heuristicaAleatoria(solucaoAtual);
+    buscaLocal(solucaoAtual);
+
+    calcFOSemPenalizacao(solucaoAtual);
+    if (solucaoAtual.funObj < melhorSolucaoConhecida.funObj)
+    {
+      copiarSolucao(solucaoAtual, melhorSolucaoConhecida);
+    }
+    tempo++;
+  }
+
+  copiarSolucao(solGrasp, melhorSolucaoConhecida);
+  printf("%d", melhorSolucaoConhecida.funObj);
+}
+
+void heuristicaAleatoria(Solucao s)
+{
+  memset(&s.tarefasStartTime[0], -1, sizeof(s.tarefasStartTime[0]));
+  memset(&s.tarefasStartTime[1], -1, sizeof(s.tarefasStartTime[1]));
+
+  /* Solucao aleatoria */
+  // gera rand (1 ATÉ total_tarefas)
+  // pela valor gerado, e verifa se ja esta contido na solucao
+  // caso não, valida de se ele pode entrar sem violar nenhuma restrição
+
+  int tempoAtual = 0;
+  bool todoMundoEntrou = false;
+  
+  
+  while (!todoMundoEntrou)
+  {
+    int tarefaAtual = (rand() % qtdTarefas) + 1;
+    printf(" tarefaAtual: %d\n", tarefaAtual);
+    if (!verificarSeEstaContidoVetor(tarefaAtual, qtdTarefas, s.tarefasStartTime[0]))
+    {
+      printf("predecessor:\n");
+      for (int idPredecessor = 0; idPredecessor < qtdTarefas - 1; idPredecessor++)
+      {
+        if (matrizRelacoesPrecedencia[idPredecessor][tarefaAtual - 1] == 1)
+        {
+          if (verificarSeEstaContidoVetor(tarefaAtual, qtdTarefas, s.tarefasStartTime[0]))
+          {
+            s.tarefasStartTime[tarefaAtual][1] = tempoAtual;
+          }
+          printf("%d\n", idPredecessor + 1);
+        }
+      }
+      printf("\n");
+    }
+
+    // Esse cara deve verificar se todo mundo entrou e só assim setar true
+    if (tempoAtual >= 24)
+    {
+      todoMundoEntrou = true;
+    }
+
+  }
+    tempoAtual++;
+
+  // for (int j = 0; j < numObj; j++)
+  //   s.vetIdMocObj[j] = (rand() % (numMoc + 1)) - 1;
+}
+
+void buscaLocal(Solucao sol) {}
+
+// Calculo FO (com penalização)
 void calcFO(Solucao &s)
 {
   s.funObj = 0;
@@ -511,6 +607,9 @@ void ordenarSolucaoStartTime()
     }
   }
 }
+
+// Calculo FO (sem penalização)
+void calcFOSemPenalizacao(Solucao &s) {}
 
 // Métodos auxiliares
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga)
