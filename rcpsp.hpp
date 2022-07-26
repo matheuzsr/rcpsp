@@ -51,7 +51,9 @@ void getQuantidadeCadaRecurso(FILE *arquivo);
 
 // Heuristica construtiva
 void heuristicaConstrutiva(Solucao &sol);
+void heuristicaConstrutivaSemMovimentar(Solucao &sol);
 void ordenarPrecedencia();
+int getCalcularMaiorTempoTarefas();
 void ordenarTarefasRecursos();
 void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol);
 
@@ -70,11 +72,13 @@ void escreverSolucao(Solucao &solucao, std::string arq);
 /* Verifica se esta contido no Vetor. */
 void gerarSolucaoECalcularFO(Solucao &sol);
 void calcularFOSolucaoLida();
+void reCalcularTempo(int tarefasStartTimeOrdenadaPrecedencia[2][MAX_QTD_TAREFAS] ,const int idInicioCalculo);
+
 
 void gerarMetricasTrabalho1(Solucao &sol);
 void gerarMetricasTrabalho2(Solucao &sol);
 bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual);
-bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[]);
+void reCalcularTempo(int tarefasStartTimeOrdenadaPrecedencia[2][MAX_QTD_TAREFAS], int idInicioCalculo);
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
 void ordenarSolucaoStartTime();
 
@@ -84,5 +88,6 @@ void calcFO(Solucao &s);
 void calcFOSemPenalizacao(Solucao &s);
 int calcularPenalizacaoEstouroRecurso(Solucao &s);
 int calcularPenalizacaoPrecedencia(Solucao &s);
+bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[]);
 
 #endif // PMM_HPP_INCLUDED
