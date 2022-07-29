@@ -5,6 +5,7 @@
 #define MAX_QTD_TAREFAS 200
 #define PESO_PENALIZACAO_PRECEDENCIA 1000
 #define PESO_PENALIZACAO_RECURSOS 100
+#define PESO_ALEATORIEDADE 3
 
 #include <string>
 
@@ -72,13 +73,12 @@ void escreverSolucao(Solucao &solucao, std::string arq);
 /* Verifica se esta contido no Vetor. */
 void gerarSolucaoECalcularFO(Solucao &sol);
 void calcularFOSolucaoLida();
-void reCalcularTempo(int tarefasStartTimeOrdenadaPrecedencia[2][MAX_QTD_TAREFAS] ,const int idInicioCalculo);
-
+int encontrarPosicaoTarefa(Solucao s, const int idTarefaProcurada);
 
 void gerarMetricasTrabalho1(Solucao &sol);
 void gerarMetricasTrabalho2(Solucao &sol);
 bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual);
-void reCalcularTempo(int tarefasStartTimeOrdenadaPrecedencia[2][MAX_QTD_TAREFAS], int idInicioCalculo);
+void reCalcularTempo(Solucao s, int idInicioReCalculo);
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
 void ordenarSolucaoStartTime();
 
