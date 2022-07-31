@@ -10,7 +10,7 @@
 
 #include <string.h>
 
-// #define MODO_DEBUG = true;
+#define MODO_DEBUG = true;
 #define SEMENTE_ALEATORIA = true;
 #define METRICAS_TRABALHO_1 = true;
 
@@ -326,7 +326,9 @@ void heuristicaAleatoria(Solucao s)
         int aux = s.tarefasStartTime[0][maiorPosicao];
         s.tarefasStartTime[0][maiorPosicao] = s.tarefasStartTime[0][menorPosicao];
         s.tarefasStartTime[0][menorPosicao] = aux;
-        // Agora é necessário recalcular o tempo da sol aleatória
+
+        // Em vez de zero passar o menor id para recalculo
+        reCalcularTempo(s, 0);
       }
 
       podeTrocar = false;
@@ -338,27 +340,66 @@ void heuristicaAleatoria(Solucao s)
 
 void reCalcularTempo(Solucao s, int idInicioReCalculo)
 {
+  // Analisar o código para pegar o tempo Atual do idInicioTarefa em diante
   int tempoAtual = 0;
-  int recursosDisponivelAtual[MAX_QTD_RECURSO];
+  int recursosDisponivelAtual[qtdRecursos];
+  bool sairWhile = true;
   memcpy(&recursosDisponivelAtual, &recursoDisponivel, sizeof(recursoDisponivel));
+  memset(&s.tarefasStartTime[1], -1, sizeof(s.tarefasStartTime[1]));
 
-  for (int i = 0; i < qtdTarefas - 1; i++)
+  while (sairWhile)
   {
-    int tarefaAtual = tarefasStartTimeOrdenadaPrecedencia[0][i];
-    int duracaoTarefaAtual = duracao[tarefaAtual - 1];
-
-    int temRecursoDisponivel = true;
-    for (int recurso = 0; recurso < MAX_QTD_RECURSO - 1; recurso++)
+    bool podeEntrar = false;
+    for (int i = 0; i < qtdTarefas; i++)
     {
-      int recursoASerUsado = consumoRecursos[tarefaAtual][recurso] + recursosDisponivelAtual[recurso];
-      if (recursoDisponivel[recurso] <= recursoASerUsado)
-        temRecursoDisponivel = false;
+      int tarefaAtual = s.tarefasStartTime[0][i];
 
-      // consumoRecursos[tarefaAtual][recurso]
-      // if(recursosDisponivelAtual[recurso] == )
+      // maluco ta saindo aqui
+      if (s.tarefasStartTime[1][i] != -1 && (s.tarefasStartTime[1][i] + duracao[i]) == tempoAtual)
+      {
+        for (int j = 0; j < qtdRecursos; j++)
+        {
+          recursosDisponivelAtual[j] = recursosDisponivelAtual[j] + consumoRecursos[tarefaAtual - 1][j];
+        }
+#ifdef MODO_DEBUG
+        printf("Eu tarefa:(%d) SAI no tempo %d\n", tarefaAtual, tempoAtual);
+#endif
+      }
+
+      if (s.tarefasStartTime[1][i] == -1 && todosAnterioresOrdenadosJaEntraram(i))
+      {
+        // maluco ta entrando aqui
+        for (int j = 0; j < qtdRecursos; j++)
+        {
+          // Aqui precisa verificar se se 5 é sucessor do 2
+          // O 2 ja tem que ter saido
+          if (consumoRecursos[tarefaAtual - 1][j] <= recursosDisponivelAtual[j])
+          {
+            podeEntrar = true;
+          }
+          else
+          {
+            podeEntrar = false;
+            break;
+          }
+        }
+
+        if (podeEntrar)
+        {
+          s.tarefasStartTime[1][i] = tempoAtual;
+
+          for (int j = 0; j < qtdRecursos; j++)
+          {
+            recursosDisponivelAtual[j] = recursosDisponivelAtual[j] - consumoRecursos[tarefaAtual - 1][j];
+          }
+#ifdef MODO_DEBUG
+          printf("Eu tarefa:(%d) ENTREI no tempo %d\n", tarefaAtual, tempoAtual);
+#endif
+        }
+      }
     }
-
-    tarefasStartTimeOrdenadaPrecedencia[0][i] = tempoAtual;
+    tempoAtual++;
+    sairWhile = !todosAnterioresOrdenadosJaEntraram(qtdTarefas - 1);
   }
 }
 
@@ -375,7 +416,8 @@ int encontrarPosicaoTarefa(Solucao s, const int idTarefaProcurada)
   return -1;
 }
 
-void buscaLocal(Solucao sol) {
+void buscaLocal(Solucao sol)
+{
   // Sorteia um cara aleatorio tenta trocar ele com todos os outros
   // Guarda a melhor solucao resultante disso
 }
