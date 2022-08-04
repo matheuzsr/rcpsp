@@ -283,6 +283,48 @@ bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual)
   return true;
 }
 
+bool todosAnterioresOrdenadosJaSairam(Solucao s, int indiceTarefaAtual, int tempoAtual)
+{
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    int tarefaAtual = s.tarefasStartTime[0][indiceTarefaAtual];
+    bool ehPredecessor = matrizRelacoesPrecedencia[i][tarefaAtual - 1] == 1;
+    int predecessor = tarefasStartTimeOrdenadaPrecedencia[0][i];
+    int idPredecessorSolucao = encontrarPosicaoTarefa(s, predecessor);
+
+    if (!(ehPredecessor && idPredecessorSolucao != -1) && tempoAtual != 0)
+      return false;
+
+    int tempoGastoPredecessor = duracao[predecessor - 1] + s.tarefasStartTime[1][idPredecessorSolucao];
+
+    // Valudar se a tarefa atual != predecessor
+    if (tempoGastoPredecessor >= 0 && (tempoGastoPredecessor < tempoAtual || tempoAtual != 0))
+      return false;
+  }
+
+  return true;
+
+  // for (int i = 0; i < indiceTarefaAtual; i++)
+  // {
+  //   // int predecessor = tarefasStartTimeOrdenadaPrecedencia[0][i];
+  //   int idPredecessorSolucao = encontrarPosicaoTarefa(s, predecessor);
+  //   bool ehDeFatoPredecessor = matrizRelacoesPrecedencia[predecessor - 1][i] == 1;
+
+  //   if (idPredecessorSolucao == -1)
+  //     return false;
+
+  //   int tempoGastoPredecessor = duracao[predecessor - 1] + s.tarefasStartTime[1][idPredecessorSolucao];
+
+  //   // if (tarefasStartTimeOrdenadaPrecedencia[1][i] == -1 || tempoGastoPredecessor < tempoAtual ||(tempoAtual == 0 && predecess or == s.tarefasStartTime[0][indiceTarefaAtual]))
+  //   if (!ehDeFatoPredecessor || duracao[predecessor - 1] != 0 && ((tarefasStartTimeOrdenadaPrecedencia[1][i] == -1 || tempoGastoPredecessor > tempoAtual) || predecessor == s.tarefasStartTime[0][indiceTarefaAtual]))
+  //   {
+  //     return false;
+  //   }
+  // }
+
+  // return true;
+}
+
 // Meta heuristica - Grasp
 void heuristicaGrasp(Solucao solGrasp)
 {
@@ -340,6 +382,21 @@ void heuristicaAleatoria(Solucao s)
 
 void reCalcularTempo(Solucao s, int idInicioReCalculo)
 {
+  /* TODO: Remover este código e voltar a usar {s} do restante do código abaixo */
+  Solucao solucaoLocal;
+  solucaoLocal.tarefasStartTime[0][0] = 1;
+  solucaoLocal.tarefasStartTime[0][1] = 2;
+  solucaoLocal.tarefasStartTime[0][2] = 3;
+  solucaoLocal.tarefasStartTime[0][3] = 4;
+  solucaoLocal.tarefasStartTime[0][4] = 5;
+  solucaoLocal.tarefasStartTime[0][5] = 6;
+  solucaoLocal.tarefasStartTime[0][6] = 7;
+  solucaoLocal.tarefasStartTime[0][7] = 8;
+  solucaoLocal.tarefasStartTime[0][8] = 9;
+  solucaoLocal.tarefasStartTime[0][9] = 10;
+  solucaoLocal.tarefasStartTime[0][10] = 11;
+  solucaoLocal.tarefasStartTime[0][11] = 12;
+
   // Analisar o código para pegar o tempo Atual do idInicioTarefa em diante
   int tempoAtual = 0;
   int recursosDisponivelAtual[qtdRecursos];
@@ -366,7 +423,7 @@ void reCalcularTempo(Solucao s, int idInicioReCalculo)
 #endif
       }
 
-      if (s.tarefasStartTime[1][i] == -1 && todosAnterioresOrdenadosJaEntraram(i))
+      if (s.tarefasStartTime[1][i] == -1 && todosAnterioresOrdenadosJaSairam(s, i, tempoAtual))
       {
         // maluco ta entrando aqui
         for (int j = 0; j < qtdRecursos; j++)
@@ -384,6 +441,7 @@ void reCalcularTempo(Solucao s, int idInicioReCalculo)
           }
         }
 
+        // Entrando com a tarefa [setar tempo, decrementar recurso]
         if (podeEntrar)
         {
           s.tarefasStartTime[1][i] = tempoAtual;
