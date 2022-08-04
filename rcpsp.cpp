@@ -348,18 +348,27 @@ void heuristicaAleatoria(Solucao s)
     int maiorPosicao = MAX(posicaoTarefaA, posicaoTarefaB);
     int menorPosicao = MIN(posicaoTarefaA, posicaoTarefaB);
 
-    int podeTrocar = true;
+    bool podeTrocar = true;
     while (podeTrocar)
     {
       for (int predecessor = 0; predecessor < qtdTarefas; predecessor++)
       {
-        if (matrizRelacoesPrecedencia[predecessor][s.tarefasStartTime[0][maiorPosicao] - 1] == 1)
+        // Validando os predecessores da tarefaA
+        bool ehPredecessorTarefaA = matrizRelacoesPrecedencia[predecessor][tarefaA - 1] == 1;
+        if (ehPredecessorTarefaA || predecessor + 1 == tarefaB)
         {
-          int posicaoPredecessor = encontrarPosicaoTarefa(s, predecessor);
-          if (s.tarefasStartTime[0][menorPosicao] < posicaoPredecessor)
-          {
+          int posicaoPredecessor = encontrarPosicaoTarefa(s, predecessor + 1);
+          if (posicaoTarefaB < posicaoPredecessor)
             podeTrocar = false;
-          }
+        }
+
+        // Validando os predecessores da tarefaB
+        bool ehPredecessorTarefaB = matrizRelacoesPrecedencia[predecessor][tarefaB - 1] == 1;
+        if (ehPredecessorTarefaB || predecessor + 1 == tarefaB)
+        {
+          int posicaoPredecessor = encontrarPosicaoTarefa(s, predecessor + 1);
+          if (posicaoTarefaA < posicaoPredecessor)
+            podeTrocar = false;
         }
       }
 
