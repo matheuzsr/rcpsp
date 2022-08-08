@@ -60,9 +60,10 @@ void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol);
 
 
 // Meta heuristica - Grasp
-void heuristicaGrasp(Solucao solGrasp);
-void heuristicaAleatoria(Solucao sol);
-void buscaLocal (Solucao sol);
+void heuristicaGrasp(Solucao &solGrasp, float LRC);
+void heuristicaAleatoria(Solucao &solGrasp, float LRC);
+void buscaLocal(Solucao &s);
+void recalculoParaEscalonarSolucaoAleatoria(Solucao &s);
 
 // Métodos para ler e escrever solução
 Solucao solucaoLida;
@@ -74,6 +75,9 @@ void escreverSolucao(Solucao &solucao, std::string arq);
 void gerarSolucaoECalcularFO(Solucao &sol);
 void calcularFOSolucaoLida();
 int encontrarPosicaoTarefa(Solucao s, const int idTarefaProcurada);
+int encontrarPrioridadeTarefa(Solucao s, const int idTarefaProcurada);
+void ordenarParteTarefasPelasPrioridades(Solucao &s, const int inicio, const int fim);
+void encaixarParteEstaticaNaAleatoria(Solucao sol, const int idInicioParteEstatica);
 
 void gerarMetricasTrabalho1(Solucao &sol);
 void gerarMetricasTrabalho2(Solucao &sol);
@@ -85,7 +89,7 @@ void ordenarSolucaoStartTime();
 
 // Metodos calculo FO
 void calcFO(Solucao &s);
-void calcFOSemPenalizacao(Solucao &s);
+void calcFOSemPenalizacaoPrecedencia(Solucao &s);
 int calcularPenalizacaoEstouroRecurso(Solucao &s);
 int calcularPenalizacaoPrecedencia(Solucao &s);
 bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[]);

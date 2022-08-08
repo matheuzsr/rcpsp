@@ -16,6 +16,7 @@
 
 #define MAX(X, Y) ((X > Y) ? X : Y)
 #define MIN(X, Y) ((X < Y) ? X : Y)
+#define ROUND(number) ((number >= 0) ? (int)(number + 0.5) : (int)(number - 0.5))
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -33,8 +34,12 @@ int main(int argc, char *argv[])
 
 void gerarMetricasTrabalho2(Solucao &sol)
 {
+  /* Passe um valor de 0 à 1 */
+  float LRC = 0.8;
+
   lerDados("./instancias/j10.sm");
-  heuristicaGrasp(sol);
+  heuristicaGrasp(sol, LRC);
+  printf("oi");
 }
 
 // Leitura
@@ -161,21 +166,14 @@ void getQuantidadeCadaRecurso(FILE *arquivo)
 void heuristicaConstrutivaSemMovimentar(Solucao &sol)
 {
   ordenarPrecedencia();
+  memcpy(&sol.tarefasStartTime[0], &tarefasStartTimeOrdenadaPrecedencia[0], sizeof(tarefasStartTimeOrdenadaPrecedencia[0]));
+  memset(&sol.tarefasStartTime[1], -1, sizeof(sol.tarefasStartTime[1]));
 
-  int tempoTarefas = 0;
-  for (int i = 0; i < qtdTarefas; i++)
+  for (int i = 1; i < qtdTarefas - 1; i++)
   {
     int idTarefaAtual = tarefasStartTimeOrdenadaPrecedencia[0][i];
-    int duracaoTarefaAtual = duracao[idTarefaAtual - 1];
-
-    tempoTarefas = duracaoTarefaAtual + tempoTarefas;
-    tarefasStartTimeOrdenadaPrecedencia[1][i] = tempoTarefas;
-
-    tempoTarefas++;
+    sol.tarefasStartTime[1][i] = i;
   }
-
-  memcpy(&sol.tarefasStartTime[0], &tarefasStartTimeOrdenadaPrecedencia[0], sizeof(tarefasStartTimeOrdenadaPrecedencia[0]));
-  memcpy(&sol.tarefasStartTime[1], &tarefasStartTimeOrdenadaPrecedencia[1], sizeof(tarefasStartTimeOrdenadaPrecedencia[1]));
 }
 
 void ordenarPrecedencia()
@@ -326,147 +324,129 @@ bool todosAnterioresOrdenadosJaSairam(Solucao s, int indiceTarefaAtual, int temp
 }
 
 // Meta heuristica - Grasp
-void heuristicaGrasp(Solucao solGrasp)
+void heuristicaGrasp(Solucao &solGrasp, float LRC)
 {
-  heuristicaConstrutivaSemMovimentar(solGrasp);
-  heuristicaAleatoria(solGrasp);
-  // Chamar o calculo de FO para penalizar recurso e calcular tbm o makespan
+  Solucao solucaoLocalMelhor;
+  copiarSolucao(solucaoLocalMelhor, solGrasp);
 
-  int maiorTempoTarefas = getCalcularMaiorTempoTarefas();
+  while (true)
+  {
+    heuristicaConstrutivaSemMovimentar(solGrasp);
+    heuristicaAleatoria(solGrasp, LRC);
+    memset(&solGrasp.tarefasStartTime[1], 0, sizeof(solGrasp.tarefasStartTime[1]));
+
+    buscaLocal(solGrasp);
+    recalculoParaEscalonarSolucaoAleatoria(solGrasp);
+    calcFOSemPenalizacaoPrecedencia(solGrasp);
+
+    if (solGrasp.funObj < solucaoLocalMelhor.funObj)
+      copiarSolucao(solucaoLocalMelhor, solGrasp);
+  }
 }
 
-void heuristicaAleatoria(Solucao s)
+void heuristicaAleatoria(Solucao &s, float LRC)
 {
-  for (int i = 0; i < PESO_ALEATORIEDADE; i++)
+  int qtdTarefasAleatorias = ROUND((qtdTarefas - 2) * LRC);
+
+  for (int i = 1; i <= qtdTarefasAleatorias; i++)
   {
-    int tarefaA = (rand() % qtdTarefas - 1) + 1;
-    int tarefaB = (rand() % qtdTarefas - 1) + 1;
+    int aux[2];
+    int tarefaAleatoria = (rand() % (qtdTarefas - 2)) + 2;
+    int idTarefaAleatoria = encontrarPosicaoTarefa(s, tarefaAleatoria);
+    int prioridadeTarefa = encontrarPrioridadeTarefa(s, tarefaAleatoria);
 
-    int posicaoTarefaA = encontrarPosicaoTarefa(s, tarefaA);
-    int posicaoTarefaB = encontrarPosicaoTarefa(s, tarefaB);
+    aux[0] = s.tarefasStartTime[0][i];
+    aux[1] = s.tarefasStartTime[1][i];
 
-    int maiorPosicao = MAX(posicaoTarefaA, posicaoTarefaB);
-    int menorPosicao = MIN(posicaoTarefaA, posicaoTarefaB);
+    s.tarefasStartTime[0][i] = tarefaAleatoria;
+    s.tarefasStartTime[1][i] = prioridadeTarefa;
 
-    bool podeTrocar = true;
-    while (podeTrocar)
-    {
-      for (int predecessor = 0; predecessor < qtdTarefas; predecessor++)
-      {
-        // Validando os predecessores da tarefaA
-        bool ehPredecessorTarefaA = matrizRelacoesPrecedencia[predecessor][tarefaA - 1] == 1;
-        if (ehPredecessorTarefaA || predecessor + 1 == tarefaB)
-        {
-          int posicaoPredecessor = encontrarPosicaoTarefa(s, predecessor + 1);
-          if (posicaoTarefaB < posicaoPredecessor)
-            podeTrocar = false;
-        }
-
-        // Validando os predecessores da tarefaB
-        bool ehPredecessorTarefaB = matrizRelacoesPrecedencia[predecessor][tarefaB - 1] == 1;
-        if (ehPredecessorTarefaB || predecessor + 1 == tarefaB)
-        {
-          int posicaoPredecessor = encontrarPosicaoTarefa(s, predecessor + 1);
-          if (posicaoTarefaA < posicaoPredecessor)
-            podeTrocar = false;
-        }
-      }
-
-      if (podeTrocar == true)
-      {
-        int aux = s.tarefasStartTime[0][maiorPosicao];
-        s.tarefasStartTime[0][maiorPosicao] = s.tarefasStartTime[0][menorPosicao];
-        s.tarefasStartTime[0][menorPosicao] = aux;
-
-        // Em vez de zero passar o menor id para recalculo
-        reCalcularTempo(s, 0);
-      }
-
-      podeTrocar = false;
-    }
+    s.tarefasStartTime[0][idTarefaAleatoria] = aux[0];
+    s.tarefasStartTime[1][idTarefaAleatoria] = aux[1];
   }
 
-  printf("%d", s.makespan);
+  ordenarParteTarefasPelasPrioridades(s, 1, qtdTarefasAleatorias);
+  ordenarParteTarefasPelasPrioridades(s, qtdTarefasAleatorias, qtdTarefas - 1);
+
+  encaixarParteEstaticaNaAleatoria(s, qtdTarefasAleatorias + 1);
 }
-
-void reCalcularTempo(Solucao s, int idInicioReCalculo)
+void encaixarParteEstaticaNaAleatoria(Solucao sol, const int idInicioParteEstatica)
 {
-  /* TODO: Remover este código e voltar a usar {s} do restante do código abaixo */
-  Solucao solucaoLocal;
-  solucaoLocal.tarefasStartTime[0][0] = 1;
-  solucaoLocal.tarefasStartTime[0][1] = 2;
-  solucaoLocal.tarefasStartTime[0][2] = 3;
-  solucaoLocal.tarefasStartTime[0][3] = 4;
-  solucaoLocal.tarefasStartTime[0][4] = 5;
-  solucaoLocal.tarefasStartTime[0][5] = 6;
-  solucaoLocal.tarefasStartTime[0][6] = 7;
-  solucaoLocal.tarefasStartTime[0][7] = 8;
-  solucaoLocal.tarefasStartTime[0][8] = 9;
-  solucaoLocal.tarefasStartTime[0][9] = 10;
-  solucaoLocal.tarefasStartTime[0][10] = 11;
-  solucaoLocal.tarefasStartTime[0][11] = 12;
+  int aux[2];
+  int auxMovimentacao[2];
 
-  // Analisar o código para pegar o tempo Atual do idInicioTarefa em diante
-  int tempoAtual = 0;
-  int recursosDisponivelAtual[qtdRecursos];
-  bool sairWhile = true;
-  memcpy(&recursosDisponivelAtual, &recursoDisponivel, sizeof(recursoDisponivel));
-  memset(&s.tarefasStartTime[1], -1, sizeof(s.tarefasStartTime[1]));
-
-  while (sairWhile)
+  for (int i = idInicioParteEstatica; i < qtdTarefas; i++)
   {
-    bool podeEntrar = false;
-    for (int i = 0; i < qtdTarefas; i++)
-    {
-      int tarefaAtual = s.tarefasStartTime[0][i];
+    int idTarefa = sol.tarefasStartTime[0][i];
+    int prioridadeTarefa = sol.tarefasStartTime[1][i];
 
-      // maluco ta saindo aqui
-      if (s.tarefasStartTime[1][i] != -1 && (s.tarefasStartTime[1][i] + duracao[i]) == tempoAtual)
+    for (int j = 1; j < qtdTarefas - 1; j++)
+    {
+      int prioridadeTarefaAleatoria = sol.tarefasStartTime[1][j];
+
+      if (prioridadeTarefa < prioridadeTarefaAleatoria)
       {
-        for (int j = 0; j < qtdRecursos; j++)
+        aux[0] = sol.tarefasStartTime[0][j];
+        aux[1] = prioridadeTarefaAleatoria;
+
+        sol.tarefasStartTime[0][j] = idTarefa;
+        sol.tarefasStartTime[1][j] = prioridadeTarefa;
+
+        auxMovimentacao[0] = sol.tarefasStartTime[0][j + 1];
+        auxMovimentacao[1] = sol.tarefasStartTime[1][j + 1];
+
+        for (int jSeguinte = j + 1; jSeguinte < qtdTarefas - 1; jSeguinte++)
         {
-          recursosDisponivelAtual[j] = recursosDisponivelAtual[j] + consumoRecursos[tarefaAtual - 1][j];
+          sol.tarefasStartTime[0][jSeguinte] = aux[0];
+          sol.tarefasStartTime[1][jSeguinte] = aux[1];
+
+          sol.tarefasStartTime[0][jSeguinte + 1] = auxMovimentacao[0];
+          sol.tarefasStartTime[1][jSeguinte + 1] = auxMovimentacao[1];
         }
-#ifdef MODO_DEBUG
-        printf("Eu tarefa:(%d) SAI no tempo %d\n", tarefaAtual, tempoAtual);
-#endif
       }
 
-      if (s.tarefasStartTime[1][i] == -1 && todosAnterioresOrdenadosJaSairam(s, i, tempoAtual))
+      sol.tarefasStartTime[0][j] = aux[0];
+      sol.tarefasStartTime[1][j] = aux[1];
+    }
+
+    printf(" %d ", sol.tarefasStartTime[1][i]);
+  }
+}
+void ordenarParteTarefasPelasPrioridades(Solucao &s, const int inicio, const int fim)
+{
+  int flag = 1;
+  int aux[2];
+  while (flag)
+  {
+    flag = 0;
+    for (int i = inicio; i <= fim; i++)
+    {
+      if (s.tarefasStartTime[1][i] > s.tarefasStartTime[1][i + 1] && s.tarefasStartTime[1][i + 1] != -1)
       {
-        // maluco ta entrando aqui
-        for (int j = 0; j < qtdRecursos; j++)
-        {
-          // Aqui precisa verificar se se 5 é sucessor do 2
-          // O 2 ja tem que ter saido
-          if (consumoRecursos[tarefaAtual - 1][j] <= recursosDisponivelAtual[j])
-          {
-            podeEntrar = true;
-          }
-          else
-          {
-            podeEntrar = false;
-            break;
-          }
-        }
+        flag = 1;
+        aux[0] = s.tarefasStartTime[0][i];
+        aux[1] = s.tarefasStartTime[1][i];
 
-        // Entrando com a tarefa [setar tempo, decrementar recurso]
-        if (podeEntrar)
-        {
-          s.tarefasStartTime[1][i] = tempoAtual;
+        s.tarefasStartTime[0][i] = s.tarefasStartTime[0][i + 1];
+        s.tarefasStartTime[1][i] = s.tarefasStartTime[1][i + 1];
 
-          for (int j = 0; j < qtdRecursos; j++)
-          {
-            recursosDisponivelAtual[j] = recursosDisponivelAtual[j] - consumoRecursos[tarefaAtual - 1][j];
-          }
-#ifdef MODO_DEBUG
-          printf("Eu tarefa:(%d) ENTREI no tempo %d\n", tarefaAtual, tempoAtual);
-#endif
-        }
+        s.tarefasStartTime[0][i + 1] = aux[0];
+        s.tarefasStartTime[1][i + 1] = aux[1];
+        printf("\n");
       }
     }
-    tempoAtual++;
-    sairWhile = !todosAnterioresOrdenadosJaEntraram(qtdTarefas - 1);
+  }
+  printf("\n");
+}
+
+int encontrarPrioridadeTarefa(Solucao s, const int idTarefaProcurada)
+{
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    if (idTarefaProcurada == s.tarefasStartTime[0][i])
+    {
+      return s.tarefasStartTime[1][i];
+    }
   }
 }
 
@@ -483,14 +463,217 @@ int encontrarPosicaoTarefa(Solucao s, const int idTarefaProcurada)
   return -1;
 }
 
-void buscaLocal(Solucao sol)
+void buscaLocal(Solucao &s)
 {
-  // Sorteia um cara aleatorio tenta trocar ele com todos os outros
-  // Guarda a melhor solucao resultante disso
+  Solucao solucaoLocalMelhor;
+  copiarSolucao(solucaoLocalMelhor, s);
+
+  int tarefaB = (rand() % (qtdTarefas - 2)) + 2;
+  int idTarefaAleatoria = encontrarPosicaoTarefa(s, tarefaB);
+
+  for (int i = 1; i < qtdTarefas - 1; i++)
+  {
+    int tarefaA = s.tarefasStartTime[0][i];
+
+    if (tarefaA != tarefaB)
+    {
+      int posicaoTarefaA = encontrarPosicaoTarefa(s, tarefaA);
+      int posicaoTarefaB = encontrarPosicaoTarefa(s, tarefaB);
+
+      int maiorPosicao = MAX(posicaoTarefaA, posicaoTarefaB);
+      int menorPosicao = MIN(posicaoTarefaA, posicaoTarefaB);
+
+      bool podeTrocar = true;
+      while (podeTrocar)
+      {
+        for (int predecessor = 0; predecessor < qtdTarefas; predecessor++)
+        {
+          // Validando os predecessores da tarefaA
+          bool ehPredecessorTarefaA = matrizRelacoesPrecedencia[predecessor][tarefaA - 1] == 1;
+          if (ehPredecessorTarefaA || predecessor + 1 == tarefaB)
+          {
+            int posicaoPredecessor = encontrarPosicaoTarefa(s, predecessor + 1);
+            if (posicaoTarefaB < posicaoPredecessor)
+              podeTrocar = false;
+          }
+
+          // Validando os predecessores da tarefaB
+          bool ehPredecessorTarefaB = matrizRelacoesPrecedencia[predecessor][tarefaB - 1] == 1;
+          if (ehPredecessorTarefaB || predecessor + 1 == tarefaB)
+          {
+            int posicaoPredecessor = encontrarPosicaoTarefa(s, predecessor + 1);
+            if (posicaoTarefaA < posicaoPredecessor)
+              podeTrocar = false;
+          }
+        }
+
+        if (podeTrocar == true)
+        {
+          int aux = s.tarefasStartTime[0][maiorPosicao];
+          s.tarefasStartTime[0][maiorPosicao] = s.tarefasStartTime[0][menorPosicao];
+          s.tarefasStartTime[0][menorPosicao] = aux;
+          printf("Troquei");
+
+          memset(&s.tarefasStartTime[1], 0, sizeof(s.tarefasStartTime[1]));
+          recalculoParaEscalonarSolucaoAleatoria(s);
+          calcFOSemPenalizacaoPrecedencia(s);
+
+          if (s.funObj < solucaoLocalMelhor.funObj)
+            copiarSolucao(solucaoLocalMelhor, s);
+        }
+
+        podeTrocar = false;
+      }
+    }
+  }
+
+  copiarSolucao(s, solucaoLocalMelhor);
 }
 
-// Calculo FO (sem penalizaverificarSeEstaContidoVetorção)
-void calcFOSemPenalizacao(Solucao &s) {}
+void recalculoParaEscalonarSolucaoAleatoria(Solucao &s)
+{
+  int maiorTempoTarefasSemEscalonar = getCalcularMaiorTempoTarefas();
+  //****************matriz tarefasPorMaiorTempo
+  int matrizExecutandoNoTempo[maiorTempoTarefasSemEscalonar][qtdTarefas];
+
+  //******************* zerando a matriz
+  for (int i = 0; i < maiorTempoTarefasSemEscalonar; i++)
+  {
+    memset(&matrizExecutandoNoTempo[i], 0, sizeof(matrizExecutandoNoTempo[i]));
+  }
+
+  //***************** Preenchendo a matriz com as tarefas uma atras da outra
+  int tempoAtual = 0;
+
+  while (tempoAtual < maiorTempoTarefasSemEscalonar)
+  {
+    for (int tarefaAtual = 0; tarefaAtual < qtdTarefas; tarefaAtual++)
+    {
+      if (s.tarefasStartTime[1][tarefaAtual] == tempoAtual)
+      {
+        matrizExecutandoNoTempo[tempoAtual][tarefaAtual] = 1;
+
+        for (int tempoExecutando = tempoAtual + 1; tempoExecutando < (tempoAtual + duracao[tarefaAtual]); tempoExecutando++)
+        {
+          matrizExecutandoNoTempo[tempoExecutando][tarefaAtual] = 1;
+        }
+      }
+    }
+    tempoAtual++;
+  }
+
+  //***************** Tentando escalonar as tarefas, comparando duas a duas
+
+  int somaRecursosUsando[qtdRecursos];
+
+  int idAtual = -1;
+  int idAtual_2 = -1;
+
+  for (int tarefaAtual = 0; tarefaAtual < qtdTarefas; tarefaAtual++)
+  {
+    idAtual = s.tarefasStartTime[1][tarefaAtual];
+    idAtual_2 = s.tarefasStartTime[1][tarefaAtual + 1];
+
+    // verificar se os idAtual e idAtual_2 podem entrar no mesmo tempo
+
+    // Primeiro verificar se idAtual é predecesor de idAtual_2
+    bool idAtualEhPredecessor = matrizRelacoesPrecedencia[idAtual - 1][idAtual_2 - 1] == 1; // significa que é predecessor ou seja não pode entrar junto
+
+    // Segundo conferir se tenho recurso suficiente para as duas tarefas executarem juntas
+    if (!idAtualEhPredecessor) // então pode executar junto
+    {
+      int somaRecursosUsando[qtdRecursos];
+      memset(&somaRecursosUsando, 0, sizeof(somaRecursosUsando));
+
+      for (int i = 0; i < qtdRecursos; i++)
+      {
+        somaRecursosUsando[i] = consumoRecursos[idAtual][i] + consumoRecursos[idAtual_2][i];
+      }
+      for (int i = 0; i < qtdRecursos; i++)
+      {
+        if (somaRecursosUsando[i] < recursoDisponivel[i])
+        {
+
+          //***************************** PODE ENTRAR JUNTO
+          // Tenho que percorrer a matriz matrizExecutandoNoTempo[][] preenchendo 1 na linha
+          // da tareda idAtual_2 a partir do startime da tarefa idAtual
+        }
+      }
+    }
+  }
+}
+
+// Calculo FO (sem penalizaverificarSeEstaContidoVetorzão)
+void calcFOSemPenalizacaoPrecedencia(Solucao &s)
+{
+  s.funObj = 0;
+  int penalizacaoEstouroRecurso = calcularPenalizacaoEstouroRecurso(s);
+
+  s.funObj = s.makespan + (PESO_PENALIZACAO_RECURSOS * penalizacaoEstouroRecurso);
+}
+
+int calcularPenalizacaoEstouroRecurso(Solucao &s)
+{
+  int recursoDisponivelAtual[qtdTarefas];
+  memcpy(&recursoDisponivelAtual, &recursoDisponivel, sizeof(recursoDisponivel));
+
+  int tempoAtual = 0;
+  int tempoFinal = s.tarefasStartTime[1][qtdTarefas - 1];
+  int matrizExecutandoNoTempo[tempoFinal][qtdTarefas];
+  int penalizacaoEstouroRecurso = 0;
+
+  // zerando a matriz
+  for (int i = 0; i < tempoFinal; i++)
+  {
+    memset(&matrizExecutandoNoTempo[i], 0, sizeof(matrizExecutandoNoTempo[i]));
+  }
+
+  while (tempoAtual < tempoFinal)
+  {
+    for (int tarefaAtual = 0; tarefaAtual < qtdTarefas; tarefaAtual++)
+    {
+      if (s.tarefasStartTime[1][tarefaAtual] == tempoAtual)
+      {
+        matrizExecutandoNoTempo[tempoAtual][tarefaAtual] = 1;
+
+        for (int tempoExecutando = tempoAtual + 1; tempoExecutando < (tempoAtual + duracao[tarefaAtual]); tempoExecutando++)
+        {
+          matrizExecutandoNoTempo[tempoExecutando][tarefaAtual] = 1;
+        }
+      }
+    }
+    tempoAtual++;
+  }
+
+  int somaRecursosUsando[qtdRecursos];
+  int diminuiPenaliza = 0;
+
+  for (int tempAtual = 0; tempAtual < tempoFinal - 1; tempAtual++)
+  {
+    memset(&somaRecursosUsando, 0, sizeof(somaRecursosUsando));
+
+    for (int tarfAtual = 0; tarfAtual < s.qtdTarefas - 1; tarfAtual++)
+    {
+      if (matrizExecutandoNoTempo[tempAtual][tarfAtual] == 1)
+      {
+        for (int i = 0; i < qtdRecursos; i++)
+        {
+          somaRecursosUsando[i] = consumoRecursos[tarfAtual][i] + somaRecursosUsando[i];
+        }
+      }
+    }
+
+    for (int i = 0; i < qtdRecursos; i++)
+    {
+      if (somaRecursosUsando[i] > recursoDisponivel[i])
+      {
+        penalizacaoEstouroRecurso = (somaRecursosUsando[i] - recursoDisponivel[i]) + penalizacaoEstouroRecurso;
+      }
+    }
+  }
+
+  return penalizacaoEstouroRecurso;
+}
 
 // Métodos auxiliares
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga)
