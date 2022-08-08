@@ -532,6 +532,22 @@ void buscaLocal(Solucao &s)
 
 void recalculoParaEscalonarSolucaoAleatoria(Solucao &s)
 {
+  int currentTime = 0;
+
+  s.tarefasStartTime[1][0] = 0;
+
+  for (int i = 0; i < qtdTarefas - 2; i++)
+  {
+    int idTarefaAtual = s.tarefasStartTime[0][i];
+    int duracaoTarefaAtual = duracao[idTarefaAtual - 1];
+    currentTime = duracaoTarefaAtual + currentTime;
+
+    s.tarefasStartTime[1][i + 1] = currentTime;
+    // currentTime++;
+  }
+
+  s.tarefasStartTime[1][qtdTarefas - 1] = s.tarefasStartTime[1][qtdTarefas - 2] + duracao[qtdTarefas - 2];
+
   int maiorTempoTarefasSemEscalonar = getCalcularMaiorTempoTarefas();
   //****************matriz tarefasPorMaiorTempo
   int matrizExecutandoNoTempo[maiorTempoTarefasSemEscalonar][qtdTarefas];
@@ -571,8 +587,8 @@ void recalculoParaEscalonarSolucaoAleatoria(Solucao &s)
 
   for (int tarefaAtual = 0; tarefaAtual < qtdTarefas; tarefaAtual++)
   {
-    idAtual = s.tarefasStartTime[1][tarefaAtual];
-    idAtual_2 = s.tarefasStartTime[1][tarefaAtual + 1];
+    idAtual = s.tarefasStartTime[0][tarefaAtual];
+    idAtual_2 = s.tarefasStartTime[0][tarefaAtual + 1];
 
     // verificar se os idAtual e idAtual_2 podem entrar no mesmo tempo
 
@@ -594,12 +610,49 @@ void recalculoParaEscalonarSolucaoAleatoria(Solucao &s)
         if (somaRecursosUsando[i] < recursoDisponivel[i])
         {
 
+          for (int tempoEscalonado = 0; tempoEscalonado < maiorTempoTarefasSemEscalonar; tempoEscalonado++)
+          {
+            if (matrizExecutandoNoTempo[tempoEscalonado][idAtual_2] == s.tarefasStartTime[1][idAtual])
+            {
+              matrizExecutandoNoTempo[tempoEscalonado][idAtual_2] = 1;
+
+              for (int tempoEscalonadoSeguinte = tempoEscalonado; tempoEscalonadoSeguinte < (tempoEscalonado + duracao[idAtual_2]); tempoEscalonadoSeguinte++)
+                matrizExecutandoNoTempo[tempoEscalonadoSeguinte][idAtual_2] = 1;
+            }
+            else
+            {
+              matrizExecutandoNoTempo[tempoEscalonado][idAtual_2] = 0;
+            }
+          }
+
+          printf("------------Dentro do if-------\n");
+          // for (int jj = 0; jj < qtdTarefas; jj++)
+          // {
+          //
+          // }
+
+          printf("%d - %d", idAtual, idAtual_2);
+          printf("\n------------Dentro do if-------\n");
           //***************************** PODE ENTRAR JUNTO
           // Tenho que percorrer a matriz matrizExecutandoNoTempo[][] preenchendo 1 na linha
           // da tareda idAtual_2 a partir do startime da tarefa idAtual
         }
       }
     }
+
+    for (int tarefaMatriz = 0; tarefaMatriz < qtdTarefas; tarefaMatriz++)
+    {
+      for (int tempoMatriz = 0; tempoMatriz < maiorTempoTarefasSemEscalonar; tempoMatriz++)
+      {
+        if (matrizExecutandoNoTempo[tempoMatriz][tarefaMatriz] == 1)
+        {
+          s.tarefasStartTime[1][tarefaMatriz] = tempoMatriz;
+          break;
+        }
+      }
+    }
+
+    printf("------------Dentro do if-------\n");
   }
 }
 
