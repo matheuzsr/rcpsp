@@ -60,7 +60,7 @@ void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol);
 
 
 // Meta heuristica - Grasp
-void heuristicaGrasp(Solucao &solGrasp, float LRC);
+void heuristicaGrasp(Solucao &solGrasp, float LRC, const double tempo_max, double &tempo_melhor, double &tempo_total);
 void heuristicaAleatoria(Solucao &solGrasp, float LRC);
 void buscaLocal(Solucao &s);
 Solucao recalculoParaEscalonarSolucaoAleatoria(Solucao s);
@@ -90,7 +90,7 @@ void ordenarSolucaoStartTime();
 // Metodos calculo FO
 void calcFO(Solucao &s);
 void calcFOSemPenalizacaoPrecedencia(Solucao &s);
-int calcularPenalizacaoEstouroRecurso(Solucao &s);
+int calcularPenalizacaoEstouroRecurso(Solucao &s, int tempoFinal);
 int calcularPenalizacaoPrecedencia(Solucao &s);
 bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[]);
 

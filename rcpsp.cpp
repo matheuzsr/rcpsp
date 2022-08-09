@@ -22,7 +22,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 #ifdef SEMENTE_ALEATORIA
-  int seed = 10;
+  int seed = time(NULL);
   srand(seed);
 #endif
 
@@ -36,10 +36,26 @@ void gerarMetricasTrabalho2(Solucao &sol)
 {
   /* Passe um valor de 0 à 1 */
   float LRC = 0.8;
+  // lerDados("./instancias/j10.sm");
+  // lerDados("./instancias/j601_2.sm");
+  // lerDados("./instancias/j901_3.sm");
+  // lerDados("./instancias/j1201_4.sm");
+  // lerDados("./instancias/j3048_10.sm");
+  // lerDados("./instancias/j6048_9.sm");
+  // lerDados("./instancias/j9048_8.sm");
+  lerDados("./instancias/j12060_7.sm");
 
-  lerDados("./instancias/j10.sm");
-  heuristicaGrasp(sol, LRC);
-  printf("oi");
+  double tempo_limite = 0.5 * 60;
+  double tempo_melhor, tempo_total;
+
+  int vezes = 3;
+
+  for (int i = 0; i < vezes; i++)
+  {
+    heuristicaGrasp(sol, LRC, tempo_limite, tempo_melhor, tempo_total);
+
+    printf("Qtd vezes: %d | FO: %d | Tempo gasto: %.5fs \n", 1, sol.funObj, tempo_melhor);
+  }
 }
 
 // Leitura
@@ -301,35 +317,20 @@ bool todosAnterioresOrdenadosJaSairam(Solucao s, int indiceTarefaAtual, int temp
   }
 
   return true;
-
-  // for (int i = 0; i < indiceTarefaAtual; i++)
-  // {
-  //   // int predecessor = tarefasStartTimeOrdenadaPrecedencia[0][i];
-  //   int idPredecessorSolucao = encontrarPosicaoTarefa(s, predecessor);
-  //   bool ehDeFatoPredecessor = matrizRelacoesPrecedencia[predecessor - 1][i] == 1;
-
-  //   if (idPredecessorSolucao == -1)
-  //     return false;
-
-  //   int tempoGastoPredecessor = duracao[predecessor - 1] + s.tarefasStartTime[1][idPredecessorSolucao];
-
-  //   // if (tarefasStartTimeOrdenadaPrecedencia[1][i] == -1 || tempoGastoPredecessor < tempoAtual ||(tempoAtual == 0 && predecess or == s.tarefasStartTime[0][indiceTarefaAtual]))
-  //   if (!ehDeFatoPredecessor || duracao[predecessor - 1] != 0 && ((tarefasStartTimeOrdenadaPrecedencia[1][i] == -1 || tempoGastoPredecessor > tempoAtual) || predecessor == s.tarefasStartTime[0][indiceTarefaAtual]))
-  //   {
-  //     return false;
-  //   }
-  // }
-
-  // return true;
 }
 
 // Meta heuristica - Grasp
-void heuristicaGrasp(Solucao &solGrasp, float LRC)
+void heuristicaGrasp(Solucao &solGrasp, float LRC, const double tempo_max, double &tempo_melhor, double &tempo_total)
 {
   Solucao solucaoLocalMelhor;
   copiarSolucao(solucaoLocalMelhor, solGrasp);
+  solucaoLocalMelhor.funObj = 99999999;
 
-  while (true)
+  clock_t hI, hF;
+  tempo_total = tempo_melhor = 0;
+  hI = clock();
+
+  while (tempo_total < tempo_max)
   {
     heuristicaConstrutivaSemMovimentar(solGrasp);
     heuristicaAleatoria(solGrasp, LRC);
@@ -339,9 +340,19 @@ void heuristicaGrasp(Solucao &solGrasp, float LRC)
     // / TODO: (Sala geraldo)
     // recalculoParaEscalonarSolucaoAleatoria(solGrasp);
     // calcFOSemPenalizacaoPrecedencia(solGrasp);
+    // calcFOSemPenalizacaoPrecedencia(solGrasp);
 
     if (solGrasp.funObj < solucaoLocalMelhor.funObj)
+    {
+      hF = clock();
+      tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+
+      printf("Melhor: %d\n", solGrasp.funObj);
       copiarSolucao(solucaoLocalMelhor, solGrasp);
+    }
+
+    hF = clock();
+    tempo_total = ((double)(hF - hI)) / CLOCKS_PER_SEC;
   }
 }
 
@@ -410,8 +421,6 @@ void encaixarParteEstaticaNaAleatoria(Solucao sol, const int idInicioParteEstati
       sol.tarefasStartTime[0][j] = aux[0];
       sol.tarefasStartTime[1][j] = aux[1];
     }
-
-    printf(" %d ", sol.tarefasStartTime[1][i]);
   }
 }
 void ordenarParteTarefasPelasPrioridades(Solucao &s, const int inicio, const int fim)
@@ -434,11 +443,9 @@ void ordenarParteTarefasPelasPrioridades(Solucao &s, const int inicio, const int
 
         s.tarefasStartTime[0][i + 1] = aux[0];
         s.tarefasStartTime[1][i + 1] = aux[1];
-        printf("\n");
       }
     }
   }
-  printf("\n");
 }
 
 int encontrarPrioridadeTarefa(Solucao s, const int idTarefaProcurada)
@@ -469,6 +476,8 @@ void buscaLocal(Solucao &s)
 {
   Solucao solucaoLocalMelhor;
   copiarSolucao(solucaoLocalMelhor, s);
+  solucaoLocalMelhor.funObj = 99999999;
+  Solucao sss;
 
   int tarefaB = (rand() % (qtdTarefas - 2)) + 2;
   int idTarefaAleatoria = encontrarPosicaoTarefa(s, tarefaB);
@@ -514,16 +523,13 @@ void buscaLocal(Solucao &s)
           int aux = s.tarefasStartTime[0][maiorPosicao];
           s.tarefasStartTime[0][maiorPosicao] = s.tarefasStartTime[0][menorPosicao];
           s.tarefasStartTime[0][menorPosicao] = aux;
-          printf("Troquei");
 
-          Solucao sss;
           sss = recalculoParaEscalonarSolucaoAleatoria(s);
           calcFOSemPenalizacaoPrecedencia(sss);
 
           if (sss.funObj < solucaoLocalMelhor.funObj)
           {
-            printf("Melhor: %d", sss.funObj);
-            copiarSolucao(solucaoLocalMelhor, s);
+            copiarSolucao(solucaoLocalMelhor, sss);
           }
         }
 
@@ -542,19 +548,18 @@ bool predecessoresJaSairam()
 
 Solucao recalculoParaEscalonarSolucaoAleatoria(Solucao s)
 {
-  printf("sasas");
   int currentTime = 0;
 
   s.tarefasStartTime[1][0] = 0;
 
-  // for (int i = 0; i < qtdTarefas - 2; i++)
-  // {
-  //   int idTarefaAtual = s.tarefasStartTime[0][i];
-  //   int duracaoTarefaAtual = duracao[idTarefaAtual - 1];
-  //   currentTime = duracaoTarefaAtual + currentTime;
+  for (int i = 0; i < qtdTarefas - 2; i++)
+  {
+    int idTarefaAtual = s.tarefasStartTime[0][i];
+    int duracaoTarefaAtual = duracao[idTarefaAtual - 1];
+    currentTime = duracaoTarefaAtual + currentTime;
 
-  //   s.tarefasStartTime[1][i + 1] = currentTime;
-  // }
+    s.tarefasStartTime[1][i + 1] = currentTime;
+  }
 
   s.tarefasStartTime[1][qtdTarefas - 1] = s.tarefasStartTime[1][qtdTarefas - 2] + duracao[qtdTarefas - 2];
 
@@ -640,18 +645,34 @@ Solucao recalculoParaEscalonarSolucaoAleatoria(Solucao s)
 void calcFOSemPenalizacaoPrecedencia(Solucao &s)
 {
   s.funObj = 0;
-  int penalizacaoEstouroRecurso = calcularPenalizacaoEstouroRecurso(s);
 
+  int tempoFinal = 0;
+  int ultimaTaref = 0;
+
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    int aux = s.tarefasStartTime[1][i];
+
+    if (aux > tempoFinal)
+    {
+      tempoFinal = aux;
+      ultimaTaref = i;
+    }
+  }
+  s.makespan = tempoFinal + duracao[ultimaTaref - 1];
+
+  int penalizacaoEstouroRecurso = calcularPenalizacaoEstouroRecurso(s, s.makespan);
   s.funObj = s.makespan + (PESO_PENALIZACAO_RECURSOS * penalizacaoEstouroRecurso);
 }
 
-int calcularPenalizacaoEstouroRecurso(Solucao &s)
+int calcularPenalizacaoEstouroRecurso(Solucao &s, int tempoFinal)
 {
   int recursoDisponivelAtual[qtdTarefas];
   memcpy(&recursoDisponivelAtual, &recursoDisponivel, sizeof(recursoDisponivel));
 
   int tempoAtual = 0;
-  int tempoFinal = s.tarefasStartTime[1][qtdTarefas - 1];
+
+  // int tempoFinal = s.tarefasStartTime[1][qtdTarefas - 1];
   int matrizExecutandoNoTempo[tempoFinal][qtdTarefas];
   int penalizacaoEstouroRecurso = 0;
 
@@ -685,7 +706,7 @@ int calcularPenalizacaoEstouroRecurso(Solucao &s)
   {
     memset(&somaRecursosUsando, 0, sizeof(somaRecursosUsando));
 
-    for (int tarfAtual = 0; tarfAtual < s.qtdTarefas - 1; tarfAtual++)
+    for (int tarfAtual = 0; tarfAtual < qtdTarefas - 1; tarfAtual++)
     {
       if (matrizExecutandoNoTempo[tempAtual][tarfAtual] == 1)
       {
