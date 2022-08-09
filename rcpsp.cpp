@@ -336,8 +336,9 @@ void heuristicaGrasp(Solucao &solGrasp, float LRC)
     memset(&solGrasp.tarefasStartTime[1], 0, sizeof(solGrasp.tarefasStartTime[1]));
 
     buscaLocal(solGrasp);
-    recalculoParaEscalonarSolucaoAleatoria(solGrasp);
-    calcFOSemPenalizacaoPrecedencia(solGrasp);
+    // / TODO: (Sala geraldo)
+    // recalculoParaEscalonarSolucaoAleatoria(solGrasp);
+    // calcFOSemPenalizacaoPrecedencia(solGrasp);
 
     if (solGrasp.funObj < solucaoLocalMelhor.funObj)
       copiarSolucao(solucaoLocalMelhor, solGrasp);
@@ -346,6 +347,7 @@ void heuristicaGrasp(Solucao &solGrasp, float LRC)
 
 void heuristicaAleatoria(Solucao &s, float LRC)
 {
+  // TODO: (Sala geraldo) max entre 1 e qtd aLEATORIO
   int qtdTarefasAleatorias = ROUND((qtdTarefas - 2) * LRC);
 
   for (int i = 1; i <= qtdTarefasAleatorias; i++)
@@ -514,12 +516,15 @@ void buscaLocal(Solucao &s)
           s.tarefasStartTime[0][menorPosicao] = aux;
           printf("Troquei");
 
-          memset(&s.tarefasStartTime[1], 0, sizeof(s.tarefasStartTime[1]));
-          recalculoParaEscalonarSolucaoAleatoria(s);
-          calcFOSemPenalizacaoPrecedencia(s);
+          Solucao sss;
+          sss = recalculoParaEscalonarSolucaoAleatoria(s);
+          calcFOSemPenalizacaoPrecedencia(sss);
 
-          if (s.funObj < solucaoLocalMelhor.funObj)
+          if (sss.funObj < solucaoLocalMelhor.funObj)
+          {
+            printf("Melhor: %d", sss.funObj);
             copiarSolucao(solucaoLocalMelhor, s);
+          }
         }
 
         podeTrocar = false;
@@ -530,130 +535,105 @@ void buscaLocal(Solucao &s)
   copiarSolucao(s, solucaoLocalMelhor);
 }
 
-void recalculoParaEscalonarSolucaoAleatoria(Solucao &s)
+bool predecessoresJaSairam()
 {
+  return true;
+}
+
+Solucao recalculoParaEscalonarSolucaoAleatoria(Solucao s)
+{
+  printf("sasas");
   int currentTime = 0;
 
   s.tarefasStartTime[1][0] = 0;
 
-  for (int i = 0; i < qtdTarefas - 2; i++)
-  {
-    int idTarefaAtual = s.tarefasStartTime[0][i];
-    int duracaoTarefaAtual = duracao[idTarefaAtual - 1];
-    currentTime = duracaoTarefaAtual + currentTime;
+  // for (int i = 0; i < qtdTarefas - 2; i++)
+  // {
+  //   int idTarefaAtual = s.tarefasStartTime[0][i];
+  //   int duracaoTarefaAtual = duracao[idTarefaAtual - 1];
+  //   currentTime = duracaoTarefaAtual + currentTime;
 
-    s.tarefasStartTime[1][i + 1] = currentTime;
-    // currentTime++;
-  }
+  //   s.tarefasStartTime[1][i + 1] = currentTime;
+  // }
 
   s.tarefasStartTime[1][qtdTarefas - 1] = s.tarefasStartTime[1][qtdTarefas - 2] + duracao[qtdTarefas - 2];
 
-  int maiorTempoTarefasSemEscalonar = getCalcularMaiorTempoTarefas();
-  //****************matriz tarefasPorMaiorTempo
-  int matrizExecutandoNoTempo[maiorTempoTarefasSemEscalonar][qtdTarefas];
+  int duracaoTotal = s.tarefasStartTime[1][qtdTarefas - 1];
 
-  //******************* zerando a matriz
-  for (int i = 0; i < maiorTempoTarefasSemEscalonar; i++)
+  int matConsumo[qtdRecursos][duracaoTotal];
+  for (int i = 0; i < qtdRecursos; i++)
   {
-    memset(&matrizExecutandoNoTempo[i], 0, sizeof(matrizExecutandoNoTempo[i]));
+    memset(&matConsumo[i], 0, sizeof(matConsumo[i]));
   }
 
-  //***************** Preenchendo a matriz com as tarefas uma atras da outra
-  int tempoAtual = 0;
+  int horTermino[qtdTarefas];
+  memset(&horTermino, 0, sizeof(horTermino));
 
-  while (tempoAtual < maiorTempoTarefasSemEscalonar)
+  for (int i = 0; i < qtdTarefas; i++)
   {
-    for (int tarefaAtual = 0; tarefaAtual < qtdTarefas; tarefaAtual++)
-    {
-      if (s.tarefasStartTime[1][tarefaAtual] == tempoAtual)
-      {
-        matrizExecutandoNoTempo[tempoAtual][tarefaAtual] = 1;
+    int id = s.tarefasStartTime[0][i] - 1;
+    horTermino[id] = s.tarefasStartTime[0][i] + duracao[id];
+  }
 
-        for (int tempoExecutando = tempoAtual + 1; tempoExecutando < (tempoAtual + duracao[tarefaAtual]); tempoExecutando++)
-        {
-          matrizExecutandoNoTempo[tempoExecutando][tarefaAtual] = 1;
-        }
-      }
+  for (int i = 1; i < qtdTarefas - 1; i++)
+  {
+    int id1 = s.tarefasStartTime[0][i] - 1;
+
+    int horIni = 0;
+    for (int j = 1; j < qtdTarefas; j++)
+    {
+      int id2 = s.tarefasStartTime[0][j] - 1;
+
+      if (matrizRelacoesPrecedencia[id2][id1] == 1)
+        horIni = MAX(horIni, horTermino[id2]);
     }
-    tempoAtual++;
-  }
 
-  //***************** Tentando escalonar as tarefas, comparando duas a duas
-
-  int somaRecursosUsando[qtdRecursos];
-
-  int idAtual = -1;
-  int idAtual_2 = -1;
-
-  for (int tarefaAtual = 0; tarefaAtual < qtdTarefas; tarefaAtual++)
-  {
-    idAtual = s.tarefasStartTime[0][tarefaAtual];
-    idAtual_2 = s.tarefasStartTime[0][tarefaAtual + 1];
-
-    // verificar se os idAtual e idAtual_2 podem entrar no mesmo tempo
-
-    // Primeiro verificar se idAtual é predecesor de idAtual_2
-    bool idAtualEhPredecessor = matrizRelacoesPrecedencia[idAtual - 1][idAtual_2 - 1] == 1; // significa que é predecessor ou seja não pode entrar junto
-
-    // Segundo conferir se tenho recurso suficiente para as duas tarefas executarem juntas
-    if (!idAtualEhPredecessor) // então pode executar junto
+    int semRecurso = 1;
+    while (semRecurso == 1)
     {
-      int somaRecursosUsando[qtdRecursos];
-      memset(&somaRecursosUsando, 0, sizeof(somaRecursosUsando));
-
-      for (int i = 0; i < qtdRecursos; i++)
+      semRecurso = 0;
+      for (int r = 0; r < qtdRecursos; r++)
       {
-        somaRecursosUsando[i] = consumoRecursos[idAtual][i] + consumoRecursos[idAtual_2][i];
-      }
-      for (int i = 0; i < qtdRecursos; i++)
-      {
-        if (somaRecursosUsando[i] < recursoDisponivel[i])
+        if (consumoRecursos[id1][r] != 0)
         {
+          int flag = 1;
 
-          for (int tempoEscalonado = 0; tempoEscalonado < maiorTempoTarefasSemEscalonar; tempoEscalonado++)
+          for (int t = horIni; t < horIni + duracao[id1]; t++)
           {
-            if (matrizExecutandoNoTempo[tempoEscalonado][idAtual_2] == s.tarefasStartTime[1][idAtual])
+            if (matConsumo[r][t] + consumoRecursos[id1][r] > recursoDisponivel[r])
             {
-              matrizExecutandoNoTempo[tempoEscalonado][idAtual_2] = 1;
-
-              for (int tempoEscalonadoSeguinte = tempoEscalonado; tempoEscalonadoSeguinte < (tempoEscalonado + duracao[idAtual_2]); tempoEscalonadoSeguinte++)
-                matrizExecutandoNoTempo[tempoEscalonadoSeguinte][idAtual_2] = 1;
+              flag = 0;
+              break;
             }
-            else
+            if (flag == 0)
             {
-              matrizExecutandoNoTempo[tempoEscalonado][idAtual_2] = 0;
+              horIni += 1;
+              semRecurso = 1;
+              break;
             }
           }
-
-          printf("------------Dentro do if-------\n");
-          // for (int jj = 0; jj < qtdTarefas; jj++)
-          // {
-          //
-          // }
-
-          printf("%d - %d", idAtual, idAtual_2);
-          printf("\n------------Dentro do if-------\n");
-          //***************************** PODE ENTRAR JUNTO
-          // Tenho que percorrer a matriz matrizExecutandoNoTempo[][] preenchendo 1 na linha
-          // da tareda idAtual_2 a partir do startime da tarefa idAtual
         }
       }
     }
 
-    for (int tarefaMatriz = 0; tarefaMatriz < qtdTarefas; tarefaMatriz++)
+    s.tarefasStartTime[1][i] = horIni;
+    horTermino[id1] = s.tarefasStartTime[1][i] + duracao[id1];
+
+    for (int r = 0; r < qtdRecursos; r++)
     {
-      for (int tempoMatriz = 0; tempoMatriz < maiorTempoTarefasSemEscalonar; tempoMatriz++)
+      if (consumoRecursos[id1][r] != 0)
       {
-        if (matrizExecutandoNoTempo[tempoMatriz][tarefaMatriz] == 1)
+        for (int t = s.tarefasStartTime[1][i]; t < horTermino[id1]; t++)
         {
-          s.tarefasStartTime[1][tarefaMatriz] = tempoMatriz;
-          break;
+          matConsumo[r][t] += consumoRecursos[id1][r];
         }
       }
     }
-
-    printf("------------Dentro do if-------\n");
   }
+  return s;
+
+  // Pegar o maior no vetor horario de termino e setar na ultima tarefa
+  // s.tarefasStartTime[1][qtdTarefas+1] = MAX(horTermino);
 }
 
 // Calculo FO (sem penalizaverificarSeEstaContidoVetorzão)

@@ -63,7 +63,7 @@ void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol);
 void heuristicaGrasp(Solucao &solGrasp, float LRC);
 void heuristicaAleatoria(Solucao &solGrasp, float LRC);
 void buscaLocal(Solucao &s);
-void recalculoParaEscalonarSolucaoAleatoria(Solucao &s);
+Solucao recalculoParaEscalonarSolucaoAleatoria(Solucao s);
 
 // Métodos para ler e escrever solução
 Solucao solucaoLida;
