@@ -80,7 +80,7 @@ void ordenarParteTarefasPelasPrioridades(Solucao &s, const int inicio, const int
 void encaixarParteEstaticaNaAleatoria(Solucao sol, const int idInicioParteEstatica);
 
 void gerarMetricasTrabalho1(Solucao &sol);
-void gerarMetricasTrabalho2(Solucao &sol);
+void gerarMetricasTrabalho2(Solucao &sol, int seed);
 bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual);
 void reCalcularTempo(Solucao s, int idInicioReCalculo);
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);

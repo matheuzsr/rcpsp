@@ -27,12 +27,12 @@ int main(int argc, char *argv[])
 #endif
 
   Solucao sol;
-  gerarMetricasTrabalho2(sol);
+  gerarMetricasTrabalho2(sol, seed);
 
   return 0;
 }
 
-void gerarMetricasTrabalho2(Solucao &sol)
+void gerarMetricasTrabalho2(Solucao &sol, int seed)
 {
   /* Passe um valor de 0 à 1 */
   float LRC = 0.8;
@@ -45,7 +45,7 @@ void gerarMetricasTrabalho2(Solucao &sol)
   // lerDados("./instancias/j9048_8.sm");
   lerDados("./instancias/j12060_7.sm");
 
-  double tempo_limite = 0.5 * 60;
+  double tempo_limite = 5 * 60;
   double tempo_melhor, tempo_total;
 
   int vezes = 3;
@@ -54,7 +54,7 @@ void gerarMetricasTrabalho2(Solucao &sol)
   {
     heuristicaGrasp(sol, LRC, tempo_limite, tempo_melhor, tempo_total);
 
-    printf("Qtd vezes: %d | FO: %d | Tempo gasto: %.5fs \n", 1, sol.funObj, tempo_melhor);
+    printf("Qtd vezes: %d | FO: %d | Tempo gasto: %.5fs | Semente: %d \n", 1, sol.funObj, tempo_melhor, seed);
   }
 }
 
