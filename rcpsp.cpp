@@ -21,40 +21,42 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-#ifdef SEMENTE_ALEATORIA
-  int seed = time(NULL);
-  srand(seed);
-#endif
-
   Solucao sol;
-  gerarMetricasTrabalho2(sol, seed);
+  gerarMetricasTrabalho2(sol);
 
   return 0;
 }
 
-void gerarMetricasTrabalho2(Solucao &sol, int seed)
+void gerarMetricasTrabalho2(Solucao &sol)
 {
   /* Passe um valor de 0 à 1 */
   float LRC = 0.8;
   // lerDados("./instancias/j10.sm");
+  // lerDados("./instancias/j301_1.sm");
   // lerDados("./instancias/j601_2.sm");
-  // lerDados("./instancias/j901_3.sm");
-  // lerDados("./instancias/j1201_4.sm");
-  // lerDados("./instancias/j3048_10.sm");
-  // lerDados("./instancias/j6048_9.sm");
+  //lerDados("./instancias/j901_3.sm");
+   //lerDados("./instancias/j1201_4.sm");
+   //lerDados("./instancias/j3048_10.sm");
+  //lerDados("./instancias/j6048_9.sm");
   // lerDados("./instancias/j9048_8.sm");
-  lerDados("./instancias/j12060_7.sm");
+   lerDados("./instancias/j12060_7.sm");
 
   double tempo_limite = 5 * 60;
   double tempo_melhor, tempo_total;
 
   int vezes = 3;
-
+  
+  int seed;
   for (int i = 0; i < vezes; i++)
   {
+  #ifdef SEMENTE_ALEATORIA
+    seed = time(NULL);
+    srand(seed);
+  #endif
+
     heuristicaGrasp(sol, LRC, tempo_limite, tempo_melhor, tempo_total);
 
-    printf("Qtd vezes: %d | FO: %d | Tempo gasto: %.5fs | Semente: %d \n", 1, sol.funObj, tempo_melhor, seed);
+    printf("Qtd vezes: %d | Tempo gasto: %.5fs | Semente: %d \n", i+1, tempo_melhor, seed);
   }
 }
 
