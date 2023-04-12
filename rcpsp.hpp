@@ -16,73 +16,46 @@ typedef struct tSolucao
     int makespan;
 } Solucao;
 
-//
-typedef struct relacaoPrecedencia
+typedef struct tPrececessores
 {
-    int qtdSucessores;
-    int sucessores[MAX_QTD_TAREFAS];
-} RelacaoPrecedencia;
+    int qtdPrecedessores;
+    int list[MAX_QTD_TAREFAS];
+} Prececessores;
+
 
 // Variaveis leitura
 char linha[100];
 int qtdTarefas;
 int qtdRecursos;
 int duracao[MAX_QTD_TAREFAS];
-
-/* TODO: Substituir esse cara pela matriz de baixo */
-RelacaoPrecedencia relacoesPrecedencia[MAX_QTD_TAREFAS];
-int matrizRelacoesPrecedencia[MAX_QTD_TAREFAS][MAX_QTD_TAREFAS];
-
+int recursoDisponivel[MAX_QTD_RECURSO];
+int matrizRelacoesSucessores[MAX_QTD_TAREFAS][MAX_QTD_TAREFAS];
+int tarefaQtdSucessores[2][MAX_QTD_TAREFAS];
 int consumoRecursos[MAX_QTD_TAREFAS][MAX_QTD_RECURSO];
 
-// Preenchido após ordenação
-int tarefasStartTimeOrdenadaPrecedencia[2][MAX_QTD_TAREFAS];
-int recursoDisponivel[MAX_QTD_RECURSO];
+// Variaveis de uso
+int tempoInicio[MAX_QTD_TAREFAS];
+int tempoFim[MAX_QTD_TAREFAS];
+int maiorDuracaoTarefas[2][MAX_QTD_TAREFAS];
+int desvioPadraoDuracaoTarefas[2][MAX_QTD_TAREFAS];
 
-// Variaveis calculo FO
-int tarefasStartTimeOrdenadaAposSolucao[2][MAX_QTD_TAREFAS];
+// Var usada abaixo no calcular
+int entraramList[MAX_QTD_TAREFAS];
 
 void lerDados(std::string arq);
-void getQtdTarefas(FILE *arquivo);
-void getRelacoesPrecedencia(FILE *arquivo);
-void getQtdRecursos(FILE *arquivo);
-void getDuracaoTarefasEConsumoRecursos(FILE *arquivo);
-void getQuantidadeCadaRecurso(FILE *arquivo);
+void lerQtdTarefas(FILE *arquivo);
+void lerRelacoesPrecedencia(FILE *arquivo);
+void lerQtdRecursos(FILE *arquivo);
+void lerDuracaoTarefasEConsumoRecursos(FILE *arquivo);
+void lerQuantidadeCadaRecurso(FILE *arquivo);
+int calcularTempoTarefa(int idTarefa, int predecessores[], int qtdPredecessores);
 
-// Heuristica construtiva
-void heuristicaConstrutiva(Solucao &sol);
-void ordenarPrecedencia();
-void ordenarTarefasRecursos();
-void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol);
+void handleOrdenarTarefasPorSucessor();
+void calcularDuracaoTarefasMaisTempoPredecessores();
 
-
-// Meta heuristica - Grasp
-void heuristicaGrasp(Solucao solGrasp);
-void heuristicaAleatoria(Solucao sol);
-void buscaLocal (Solucao sol);
-
-// Métodos para ler e escrever solução
-Solucao solucaoLida;
-void lerSolucao(std::string arq);
-void escreverSolucao(Solucao &solucao, std::string arq);
-
-// Metodos auxiliares
-/* Verifica se esta contido no Vetor. */
-void gerarSolucaoECalcularFO(Solucao &sol);
-void calcularFOSolucaoLida();
-
-void gerarMetricasTrabalho1(Solucao &sol);
-void gerarMetricasTrabalho2(Solucao &sol);
-bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual);
-bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[]);
-void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
-void ordenarSolucaoStartTime();
-
-
-// Metodos calculo FO
-void calcFO(Solucao &s);
-void calcFOSemPenalizacao(Solucao &s);
-int calcularPenalizacaoEstouroRecurso(Solucao &s);
-int calcularPenalizacaoPrecedencia(Solucao &s);
+// Metodos utilitários
+bool verificarSeEstaContidoVetor(const int value, const int qtd, const int vetor[]);
+int findIndexByValue(const int value, const int qtd, const int vetor[]);
+tPrececessores getPredecessores(const int tarefa);
 
 #endif // PMM_HPP_INCLUDED

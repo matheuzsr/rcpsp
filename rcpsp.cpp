@@ -4,103 +4,152 @@
 #include <time.h>
 #include <memory.h>
 #include <math.h>
+#include <limits.h>
 #include "rcpsp.hpp"
 #include <iostream>
 #include <fstream>
 
 #include <string.h>
 
-// #define MODO_DEBUG = true;
-#define SEMENTE_ALEATORIA = true;
-#define METRICAS_TRABALHO_1 = true;
-
 #define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
 
 int main(int argc, char *argv[])
 {
-#ifdef SEMENTE_ALEATORIA
-  int seed = 10;
-  srand(seed);
-#endif
-
-  Solucao sol;
-  gerarMetricasTrabalho2(sol);
-
-  return 0;
-}
-
-void gerarMetricasTrabalho2(Solucao &sol)
-{
   lerDados("./instancias/j10.sm");
-  heuristicaGrasp(sol);
+  handleOrdenarTarefasPorSucessor();
+  calcularDuracaoTarefasMaisTempoPredecessores();
+  printf("Teste");
 }
 
-void gerarMetricasTrabalho1(Solucao &sol)
+/*
+ * O objetivo desse método é ordenar as tarefas pelas que tem
+ * a MAIOR quantidade de SUCESSORES
+ */
+void handleOrdenarTarefasPorSucessor()
 {
-  clock_t h;
-  clock_t hUmaVez;
-  double tempoGasto;
-
-  h = clock();
-  /*  Calc FO  1 X */
-
-  /*  Solucao inicial 1000 X */
-  // int vezes = 1000;
-  // lerDados("./instancias/j12060_7.sm");
-  // heuristicaConstrutiva(sol);
-
-  /*  Calc FO  1 X e 1000 X */
-  int vezes = 1000;
-  lerDados("./instancias/j12060_7.sm");
-  heuristicaConstrutiva(sol);
-  for (int i = 0; i < vezes; i++)
+  bool flag = true;
+  int indexAux;
+  int qtdSucessorAux;
+  while (flag)
   {
-    calcFO(sol);
-    if (i == 0)
+    flag = false;
+    for (int i = 0; i < qtdTarefas; i++)
     {
-      hUmaVez = clock() - h;
-      tempoGasto = (double)hUmaVez / CLOCKS_PER_SEC;
-      printf("Qtd vezes: %d | FO: %d | Tempo gasto: %.5fs \n", 1, sol.funObj, tempoGasto);
+      if (tarefaQtdSucessores[1][i + 1] > tarefaQtdSucessores[1][i])
+      {
+        flag = true;
+        indexAux = tarefaQtdSucessores[0][i + 1];
+        qtdSucessorAux = tarefaQtdSucessores[1][i + 1];
+
+        tarefaQtdSucessores[0][i + 1] = tarefaQtdSucessores[0][i];
+        tarefaQtdSucessores[1][i + 1] = tarefaQtdSucessores[1][i];
+
+        tarefaQtdSucessores[0][i] = indexAux;
+        tarefaQtdSucessores[1][i] = qtdSucessorAux;
+      }
+    }
+  }
+}
+
+void calcularDuracaoTarefasMaisTempoPredecessores()
+{
+  memcpy(&maiorDuracaoTarefas[0], &tarefaQtdSucessores[0], sizeof(tarefaQtdSucessores[0]));
+  memset(&maiorDuracaoTarefas[1], -1, sizeof(maiorDuracaoTarefas[1]));
+
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    int idAtual = maiorDuracaoTarefas[0][i];
+
+    tPrececessores predecessores = getPredecessores(idAtual);
+    int qtdPredecessores = predecessores.qtdPrecedessores;
+
+    printf("\nTarefa %d ->", idAtual + 1);
+    memset(&entraramList, -1, sizeof(entraramList));
+    maiorDuracaoTarefas[1][i] = calcularTempoTarefa(idAtual, predecessores.list, qtdPredecessores);
+    printf("\nTempo %d \n", maiorDuracaoTarefas[1][i]);
+  }
+}
+
+void push_array(int id, int array[], int qtd)
+{
+  for (int i = 0; i < qtd; i++)
+  {
+    if (array[i] == -1)
+    {
+      array[i] = id;
+
+      return;
+    }
+  }
+}
+
+bool includes_array(int id, int array[], int qtd)
+{
+  for (int i = 0; i < qtd; i++)
+  {
+    if (array[i] == id)
+    {
+      return true;
     }
   }
 
-  h = clock() - h;
-
-  tempoGasto = (double)h / CLOCKS_PER_SEC;
-  printf("Qtd vezes: %d | FO: %d | Tempo gasto: %.5fs \n", vezes, sol.funObj, tempoGasto);
+  return false;
 }
 
-/* lê dados, lê solução e calcula FO */
-void gerarSolucaoECalcularFO(Solucao &sol)
+int calcularTempoTarefa(int idTarefa, int predecessores[], int qtdPredecessores)
 {
-  lerDados("./instancias/j10.sm");
-  heuristicaConstrutiva(sol);
-  calcFO(sol);
-  escreverSolucao(sol, "./solucao/j12060_7_minha.sol");
+  int tempoTotal = duracao[idTarefa];
+  for (int i = 0; i < qtdPredecessores; i++)
+  {
+    int predecessor = predecessores[i];
+    if (matrizRelacoesSucessores[predecessor][idTarefa] == 1)
+    {
+      tPrececessores predecessoresDentro = getPredecessores(predecessor);
+      int qtdPredecessoresDentro = predecessoresDentro.qtdPrecedessores;
+
+      if (!includes_array(predecessor, entraramList, qtdTarefas))
+      {
+        printf(" %d(%d) |", predecessor + 1, duracao[predecessor]);
+        push_array(predecessor, entraramList, qtdTarefas);
+        tempoTotal += calcularTempoTarefa(predecessor, predecessoresDentro.list, qtdPredecessoresDentro);
+      }
+    }
+  }
+
+  return tempoTotal;
 }
 
-/* lê dados, heristica construtiva e calcula FO e RETORNA O conteudo lido em `solucaoLida` */
-void calcularFOSolucaoLida()
+tPrececessores getPredecessores(const int tarefa)
 {
-  lerDados("./instancias/j10.sm");
-  lerSolucao("./solucao/j10.sol");
-  calcFO(solucaoLida);
+  tPrececessores predecessores;
+  predecessores.qtdPrecedessores = 0;
+
+  for (int j = 0; j < qtdTarefas; j++)
+  {
+    if (matrizRelacoesSucessores[j][tarefa] == 1)
+    {
+      predecessores.list[predecessores.qtdPrecedessores] = j;
+      predecessores.qtdPrecedessores++;
+    }
+  }
+
+  return predecessores;
 }
 
 // Leitura
 void lerDados(const string arq)
 {
   FILE *arquivo = fopen(arq.c_str(), "r");
-  getQtdTarefas(arquivo);
-  getQtdRecursos(arquivo);
-  getRelacoesPrecedencia(arquivo);
-  getDuracaoTarefasEConsumoRecursos(arquivo);
-  getQuantidadeCadaRecurso(arquivo);
+  lerQtdTarefas(arquivo);
+  lerQtdRecursos(arquivo);
+  lerRelacoesPrecedencia(arquivo);
+  lerDuracaoTarefasEConsumoRecursos(arquivo);
+  lerQuantidadeCadaRecurso(arquivo);
 
   fclose(arquivo);
 }
-void getQtdTarefas(FILE *arquivo)
+void lerQtdTarefas(FILE *arquivo)
 {
   do
   {
@@ -109,7 +158,7 @@ void getQtdTarefas(FILE *arquivo)
   fscanf(arquivo, "%s", &linha);
   qtdTarefas = atoi(linha);
 }
-void getQtdRecursos(FILE *arquivo)
+void lerQtdRecursos(FILE *arquivo)
 {
   do
   {
@@ -120,11 +169,11 @@ void getQtdRecursos(FILE *arquivo)
 
   qtdRecursos = atoi(linha);
 }
-void getRelacoesPrecedencia(FILE *arquivo)
+void lerRelacoesPrecedencia(FILE *arquivo)
 {
   for (int i = 0; i < qtdTarefas; i++)
   {
-    memset(&matrizRelacoesPrecedencia[i], 0, sizeof(matrizRelacoesPrecedencia[i]));
+    memset(&matrizRelacoesSucessores[i], 0, sizeof(matrizRelacoesSucessores[i]));
   }
 
   do
@@ -143,19 +192,21 @@ void getRelacoesPrecedencia(FILE *arquivo)
     fscanf(arquivo, "%s\t", &linha);
 
     fscanf(arquivo, "%s\t", &linha);
-    relacoesPrecedencia[i].qtdSucessores = atoi(linha);
+    int qtdSucessores = atoi(linha);
 
-    for (int j = 0; j < relacoesPrecedencia[i].qtdSucessores; j++)
+    tarefaQtdSucessores[0][i] = i;
+    tarefaQtdSucessores[1][i] = qtdSucessores;
+
+    for (int j = 0; j < qtdSucessores; j++)
     {
       fscanf(arquivo, "%s\t", &linha);
       int idSucessor = atoi(linha);
-      relacoesPrecedencia[i].sucessores[j] = idSucessor;
 
-      matrizRelacoesPrecedencia[i][idSucessor - 1] = 1;
+      matrizRelacoesSucessores[i][idSucessor - 1] = 1;
     }
   }
 }
-void getDuracaoTarefasEConsumoRecursos(FILE *arquivo)
+void lerDuracaoTarefasEConsumoRecursos(FILE *arquivo)
 {
   memset(&duracao, -1, sizeof(duracao));
 
@@ -187,7 +238,7 @@ void getDuracaoTarefasEConsumoRecursos(FILE *arquivo)
     }
   }
 }
-void getQuantidadeCadaRecurso(FILE *arquivo)
+void lerQuantidadeCadaRecurso(FILE *arquivo)
 {
   fscanf(arquivo, "%s\n", &linha);
   do
@@ -208,469 +259,27 @@ void getQuantidadeCadaRecurso(FILE *arquivo)
   }
 }
 
-// Heuristica
-void heuristicaConstrutiva(Solucao &sol)
-{
-  ordenarPrecedencia();
-  ordenarTarefasRecursos();
-  setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(sol);
-}
-void ordenarPrecedencia()
-{
-  RelacaoPrecedencia relacoesPrecedenciaOrdenado[MAX_QTD_TAREFAS];
-  memcpy(&relacoesPrecedenciaOrdenado, &relacoesPrecedencia, sizeof(relacoesPrecedencia));
-
-  int flag = 1;
-  RelacaoPrecedencia aux;
-
-  // TODO: alterar para uma outra função genérica, que recebe uma função que faz a condicional que ta dentro do if
-  while (flag)
-  {
-    flag = 0;
-    for (int i = 0; i < qtdTarefas; i++)
-    {
-      if (relacoesPrecedenciaOrdenado[i].qtdSucessores <
-          relacoesPrecedenciaOrdenado[i + 1].qtdSucessores)
-      {
-        flag = 1;
-        aux = relacoesPrecedenciaOrdenado[i];
-        relacoesPrecedenciaOrdenado[i] = relacoesPrecedenciaOrdenado[i + 1];
-        relacoesPrecedenciaOrdenado[i + 1] = aux;
-      }
-    }
-  }
-
-  // TODO: alterar para uma outra função genérica, que recebe uma função que faz a condicional que ta dentro do if
-  flag = 1;
-  while (flag)
-  {
-    flag = 0;
-    for (int i = 0; i < qtdTarefas; i++)
-    {
-      if (relacoesPrecedenciaOrdenado[i].qtdSucessores == relacoesPrecedenciaOrdenado[i + 1].qtdSucessores &&
-          (relacoesPrecedenciaOrdenado[i].sucessores[0] >
-           relacoesPrecedenciaOrdenado[i + 1].sucessores[0]))
-      {
-        flag = 1;
-        aux = relacoesPrecedenciaOrdenado[i];
-        relacoesPrecedenciaOrdenado[i] = relacoesPrecedenciaOrdenado[i + 1];
-        relacoesPrecedenciaOrdenado[i + 1] = aux;
-      }
-    }
-  }
-
-  int tarefaAtualOrdenada = 0;
-
-  memset(&tarefasStartTimeOrdenadaPrecedencia[0], -1, sizeof(tarefasStartTimeOrdenadaPrecedencia[0]));
-  memset(&tarefasStartTimeOrdenadaPrecedencia[1], -1, sizeof(tarefasStartTimeOrdenadaPrecedencia[1]));
-
-  for (int i = 0; i < qtdTarefas; i++)
-  {
-    if (!verificarSeEstaContidoVetor(i + 1, qtdTarefas, tarefasStartTimeOrdenadaPrecedencia[0]))
-    {
-      tarefasStartTimeOrdenadaPrecedencia[0][tarefaAtualOrdenada] = i + 1;
-      tarefaAtualOrdenada = tarefaAtualOrdenada + 1;
-    }
-
-    for (int j = 0; j < relacoesPrecedenciaOrdenado[i].qtdSucessores; j++)
-    {
-      if (!verificarSeEstaContidoVetor(relacoesPrecedenciaOrdenado[i].sucessores[j], qtdTarefas, tarefasStartTimeOrdenadaPrecedencia[0]))
-      {
-        tarefasStartTimeOrdenadaPrecedencia[0][tarefaAtualOrdenada] = relacoesPrecedenciaOrdenado[i].sucessores[j];
-        tarefaAtualOrdenada = tarefaAtualOrdenada + 1;
-      }
-    }
-  }
-}
-void ordenarTarefasRecursos()
-{
-  int tempoAtual = 0;
-  bool sairWhile = true;
-
-  int recursoDisponivelAtual[qtdTarefas];
-  memcpy(&recursoDisponivelAtual, &recursoDisponivel, sizeof(recursoDisponivel));
-
-  while (sairWhile)
-  {
-    bool podeEntrar = false;
-    for (int i = 0; i < qtdTarefas; i++)
-    {
-      int tarefaAtual = tarefasStartTimeOrdenadaPrecedencia[0][i];
-
-      // maluco ta saindo aqui
-      if (tarefasStartTimeOrdenadaPrecedencia[1][i] != -1 && (tarefasStartTimeOrdenadaPrecedencia[1][i] + duracao[i]) == tempoAtual)
-      {
-        for (int j = 0; j < qtdRecursos; j++)
-        {
-          recursoDisponivelAtual[j] = recursoDisponivelAtual[j] + consumoRecursos[tarefaAtual - 1][j];
-        }
-#ifdef MODO_DEBUG
-        printf("Eu tarefa:(%d) SAI no tempo %d\n", tarefaAtual, tempoAtual);
-#endif
-      }
-
-      if (tarefasStartTimeOrdenadaPrecedencia[1][i] == -1 && todosAnterioresOrdenadosJaEntraram(i))
-      {
-        // maluco ta entrando aqui
-        for (int j = 0; j < qtdRecursos; j++)
-        {
-          if (consumoRecursos[tarefaAtual - 1][j] <= recursoDisponivelAtual[j])
-          {
-            podeEntrar = true;
-          }
-          else
-          {
-            podeEntrar = false;
-            break;
-          }
-        }
-
-        if (podeEntrar)
-        {
-          tarefasStartTimeOrdenadaPrecedencia[1][i] = tempoAtual;
-
-          for (int j = 0; j < qtdRecursos; j++)
-          {
-            recursoDisponivelAtual[j] = recursoDisponivelAtual[j] - consumoRecursos[tarefaAtual - 1][j];
-          }
-#ifdef MODO_DEBUG
-          printf("Eu tarefa:(%d) ENTREI no tempo %d\n", tarefaAtual, tempoAtual);
-#endif
-        }
-      }
-    }
-
-    tempoAtual++;
-    sairWhile = !todosAnterioresOrdenadosJaEntraram(qtdTarefas - 1);
-  }
-}
-bool todosAnterioresOrdenadosJaEntraram(const int indiceTarefaAtual)
-{
-  for (int i = 0; i < indiceTarefaAtual; i++)
-  {
-    if (tarefasStartTimeOrdenadaPrecedencia[1][i] == -1)
-    {
-      return false;
-    }
-  }
-
-  return true;
-}
-void setTarefasStartTimeOrdenadoPrecedenciaSolucaoEMakespan(Solucao &sol)
-{
-  int idUltimaTarefa = tarefasStartTimeOrdenadaPrecedencia[0][qtdTarefas - 2];
-  int tempoUltimaTarefaReal = tarefasStartTimeOrdenadaPrecedencia[1][qtdTarefas - 2];
-
-  // TODO: (Dúvida) Na ultima posição do array ordenado p/ precedencia estara sempre o time do fim da ultima tarefa?
-  tarefasStartTimeOrdenadaPrecedencia[1][qtdTarefas - 1] = tempoUltimaTarefaReal + duracao[idUltimaTarefa - 1] - 1;
-
-  memcpy(&sol.tarefasStartTime, &tarefasStartTimeOrdenadaPrecedencia, sizeof(tarefasStartTimeOrdenadaPrecedencia));
-
-  int flag = 1;
-  int aux[2];
-
-  while (flag)
-  {
-    flag = 0;
-    for (int i = 0; i < qtdTarefas; i++)
-    {
-      if (sol.tarefasStartTime[0][i] > sol.tarefasStartTime[0][i + 1] && sol.tarefasStartTime[0][i + 1] != -1)
-      {
-        flag = 1;
-        aux[0] = sol.tarefasStartTime[0][i];
-        aux[1] = sol.tarefasStartTime[1][i];
-
-        sol.tarefasStartTime[0][i] = sol.tarefasStartTime[0][i + 1];
-        sol.tarefasStartTime[1][i] = sol.tarefasStartTime[1][i + 1];
-
-        sol.tarefasStartTime[0][i + 1] = aux[0];
-        sol.tarefasStartTime[1][i + 1] = aux[1];
-      }
-    }
-  }
-
-  sol.qtdTarefas = qtdTarefas;
-  sol.makespan = tarefasStartTimeOrdenadaPrecedencia[1][qtdTarefas - 1];
-}
-
-// Meta heuristica - Grasp
-void heuristicaGrasp(Solucao solGrasp)
-{
-  /* Busca local */
-  // Pegar do final para o começo, e vendo onde é que ele pode entrar sem violar nada
-  // (precedencia e recurso)
-  // e recalcular
-
-  //
-
-  Solucao melhorSolucaoConhecida;
-  melhorSolucaoConhecida.funObj = 2147483646;
-
-  int maxTempo = 100;
-  int tempo = 0;
-  while (tempo < maxTempo)
-  {
-    Solucao solucaoAtual;
-    heuristicaAleatoria(solucaoAtual);
-    buscaLocal(solucaoAtual);
-
-    calcFOSemPenalizacao(solucaoAtual);
-    if (solucaoAtual.funObj < melhorSolucaoConhecida.funObj)
-    {
-      copiarSolucao(solucaoAtual, melhorSolucaoConhecida);
-    }
-    tempo++;
-  }
-
-  copiarSolucao(solGrasp, melhorSolucaoConhecida);
-  printf("%d", melhorSolucaoConhecida.funObj);
-}
-
-void heuristicaAleatoria(Solucao s)
-{
-  memset(&s.tarefasStartTime[0], -1, sizeof(s.tarefasStartTime[0]));
-  memset(&s.tarefasStartTime[1], -1, sizeof(s.tarefasStartTime[1]));
-
-  /* Solucao aleatoria */
-  // gera rand (1 ATÉ total_tarefas)
-  // pela valor gerado, e verifa se ja esta contido na solucao
-  // caso não, valida de se ele pode entrar sem violar nenhuma restrição
-
-  int tempoAtual = 0;
-  bool todoMundoEntrou = false;
-  
-  
-  while (!todoMundoEntrou)
-  {
-    int tarefaAtual = (rand() % qtdTarefas) + 1;
-    printf(" tarefaAtual: %d\n", tarefaAtual);
-    if (!verificarSeEstaContidoVetor(tarefaAtual, qtdTarefas, s.tarefasStartTime[0]))
-    {
-      printf("predecessor:\n");
-      for (int idPredecessor = 0; idPredecessor < qtdTarefas - 1; idPredecessor++)
-      {
-        if (matrizRelacoesPrecedencia[idPredecessor][tarefaAtual - 1] == 1)
-        {
-          if (verificarSeEstaContidoVetor(tarefaAtual, qtdTarefas, s.tarefasStartTime[0]))
-          {
-            s.tarefasStartTime[tarefaAtual][1] = tempoAtual;
-          }
-          printf("%d\n", idPredecessor + 1);
-        }
-      }
-      printf("\n");
-    }
-
-    // Esse cara deve verificar se todo mundo entrou e só assim setar true
-    if (tempoAtual >= 24)
-    {
-      todoMundoEntrou = true;
-    }
-
-  }
-    tempoAtual++;
-
-  // for (int j = 0; j < numObj; j++)
-  //   s.vetIdMocObj[j] = (rand() % (numMoc + 1)) - 1;
-}
-
-void buscaLocal(Solucao sol) {}
-
-// Calculo FO (com penalização)
-void calcFO(Solucao &s)
-{
-  s.funObj = 0;
-  int penalizacaoPrecedencia = calcularPenalizacaoPrecedencia(s);
-  int penalizacaoEstouroRecurso = calcularPenalizacaoEstouroRecurso(s);
-
-  s.funObj = s.makespan + (PESO_PENALIZACAO_PRECEDENCIA * penalizacaoPrecedencia) + (PESO_PENALIZACAO_RECURSOS * penalizacaoEstouroRecurso);
-}
-
-int calcularPenalizacaoPrecedencia(Solucao &s)
-{
-  int penalizacaoPrecedencia = 0;
-
-  memcpy(&tarefasStartTimeOrdenadaAposSolucao[0], &s.tarefasStartTime[0], sizeof(s.tarefasStartTime[0]));
-  memcpy(&tarefasStartTimeOrdenadaAposSolucao[1], &s.tarefasStartTime[1], sizeof(s.tarefasStartTime[1]));
-  ordenarSolucaoStartTime();
-
-  for (int i = 1; i < s.qtdTarefas - 1; i++)
-  {
-    int idSucessor = tarefasStartTimeOrdenadaAposSolucao[0][i];
-
-    for (int j = 2; j < s.qtdTarefas; j++)
-    {
-      int duracaoPredecessor = duracao[j - 1];
-      int tempoStartTimePredecessor = s.tarefasStartTime[1][j - 1];
-      int tempoStartTimeSucessor = s.tarefasStartTime[1][idSucessor - 1];
-
-      bool jEhPredecessor = matrizRelacoesPrecedencia[j - 1][idSucessor - 1] == 1;
-      bool predecessorEntrandoDepois = (tempoStartTimePredecessor + duracaoPredecessor) > tempoStartTimeSucessor;
-
-      if (jEhPredecessor && predecessorEntrandoDepois)
-      {
-        penalizacaoPrecedencia += 1;
-#ifdef MODO_DEBUG
-        printf("Eu tarefa (%d) ENTREI antes da hora, devia entrado depois da %d\n", j + 1, idSucessor);
-#endif
-      }
-    }
-  }
-
-  return penalizacaoPrecedencia;
-}
-
-int calcularPenalizacaoEstouroRecurso(Solucao &s)
-{
-  int recursoDisponivelAtual[qtdTarefas];
-  memcpy(&recursoDisponivelAtual, &recursoDisponivel, sizeof(recursoDisponivel));
-
-  int tempoAtual = 0;
-  int tempoFinal = s.tarefasStartTime[1][qtdTarefas - 1];
-  int matrizExecutandoNoTempo[tempoFinal][qtdTarefas];
-  int penalizacaoEstouroRecurso = 0;
-
-  // zerando a matriz
-  for (int i = 0; i < tempoFinal; i++)
-  {
-    memset(&matrizExecutandoNoTempo[i], 0, sizeof(matrizExecutandoNoTempo[i]));
-  }
-
-  while (tempoAtual < tempoFinal)
-  {
-    for (int tarefaAtual = 0; tarefaAtual < qtdTarefas; tarefaAtual++)
-    {
-      if (s.tarefasStartTime[1][tarefaAtual] == tempoAtual)
-      {
-        matrizExecutandoNoTempo[tempoAtual][tarefaAtual] = 1;
-
-        for (int tempoExecutando = tempoAtual + 1; tempoExecutando < (tempoAtual + duracao[tarefaAtual]); tempoExecutando++)
-        {
-          matrizExecutandoNoTempo[tempoExecutando][tarefaAtual] = 1;
-        }
-      }
-    }
-    tempoAtual++;
-  }
-
-  int somaRecursosUsando[qtdRecursos];
-  int diminuiPenaliza = 0;
-
-  for (int tempAtual = 0; tempAtual < tempoFinal - 1; tempAtual++)
-  {
-    memset(&somaRecursosUsando, 0, sizeof(somaRecursosUsando));
-
-    for (int tarfAtual = 0; tarfAtual < s.qtdTarefas - 1; tarfAtual++)
-    {
-      if (matrizExecutandoNoTempo[tempAtual][tarfAtual] == 1)
-      {
-        for (int i = 0; i < qtdRecursos; i++)
-        {
-          somaRecursosUsando[i] = consumoRecursos[tarfAtual][i] + somaRecursosUsando[i];
-        }
-      }
-    }
-
-    for (int i = 0; i < qtdRecursos; i++)
-    {
-      if (somaRecursosUsando[i] > recursoDisponivel[i])
-      {
-        penalizacaoEstouroRecurso = (somaRecursosUsando[i] - recursoDisponivel[i]) + penalizacaoEstouroRecurso;
-      }
-    }
-  }
-
-  return penalizacaoEstouroRecurso;
-}
-
-void ordenarSolucaoStartTime()
-{
-  int flag = 1;
-  int aux0, aux1;
-  while (flag)
-  {
-    flag = 0;
-    for (int i = 0; i < qtdTarefas; i++)
-    {
-      if (tarefasStartTimeOrdenadaAposSolucao[1][i] > tarefasStartTimeOrdenadaAposSolucao[1][i + 1] && tarefasStartTimeOrdenadaAposSolucao[1][i + 1] != -1)
-      {
-        flag = 1;
-        aux0 = tarefasStartTimeOrdenadaAposSolucao[0][i];
-        aux1 = tarefasStartTimeOrdenadaAposSolucao[1][i];
-
-        tarefasStartTimeOrdenadaAposSolucao[0][i] = tarefasStartTimeOrdenadaAposSolucao[0][i + 1];
-        tarefasStartTimeOrdenadaAposSolucao[1][i] = tarefasStartTimeOrdenadaAposSolucao[1][i + 1];
-
-        tarefasStartTimeOrdenadaAposSolucao[0][i + 1] = aux0;
-        tarefasStartTimeOrdenadaAposSolucao[1][i + 1] = aux1;
-      }
-    }
-  }
-}
-
-// Calculo FO (sem penalização)
-void calcFOSemPenalizacao(Solucao &s) {}
-
 // Métodos auxiliares
-void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga)
+bool verificarSeEstaContidoVetor(const int value, const int qtd, const int vetor[])
 {
-  memcpy(&solucaoNova, &solucaoAntiga, sizeof(solucaoAntiga));
-}
-void lerSolucao(std::string arq)
-{
-  FILE *arquivo = fopen(arq.c_str(), "r");
-
-  fscanf(arquivo, "%s", &linha);
-  fscanf(arquivo, "%s", &linha);
-  solucaoLida.funObj = atoi(linha);
-
-  fscanf(arquivo, "%s", &linha);
-  fscanf(arquivo, "%s", &linha);
-  solucaoLida.makespan = atoi(linha);
-
-  fscanf(arquivo, "%s", &linha);
-  fscanf(arquivo, "%s", &linha);
-  fscanf(arquivo, "%s", &linha);
-  fscanf(arquivo, "%s", &linha);
-
-  int i = 0;
-  do
-  {
-    fscanf(arquivo, "%s", &linha);
-    solucaoLida.tarefasStartTime[0][i] = atoi(linha);
-    fscanf(arquivo, "%s", &linha);
-    solucaoLida.tarefasStartTime[1][i] = atoi(linha);
-    i++;
-  } while (fgetc(arquivo) != EOF);
-  solucaoLida.qtdTarefas = i - 1;
-}
-void escreverSolucao(Solucao &solucao, std::string arq)
-{
-  FILE *arquivo = fopen(arq.c_str(), "w");
-
-  fprintf(arquivo, "FO: ");
-  fprintf(arquivo, "%d\n", solucao.funObj);
-
-  fprintf(arquivo, "Makespan: ");
-  fprintf(arquivo, "%d\n", solucao.makespan);
-
-  fprintf(arquivo, "------------------\n");
-  fprintf(arquivo, "Job Start Time\n");
-
-  for (int i = 0; i < solucao.qtdTarefas; i++)
-  {
-    fprintf(arquivo, "%d %d\n",
-            solucao.tarefasStartTime[0][i],
-            solucao.tarefasStartTime[1][i]);
-  }
-}
-bool verificarSeEstaContidoVetor(const int value, const int quantidade, const int vetor[])
-{
-  for (int i = 0; i < quantidade; i++)
+  for (int i = 0; i < qtd; i++)
   {
     if (value == vetor[i])
     {
       return true;
+    }
+  }
+
+  return false;
+}
+
+int findIndexByValue(const int value, const int qtd, const int vetor[])
+{
+  for (int i = 0; i < qtd; i++)
+  {
+    if (vetor[i] == value)
+    {
+      return i;
     }
   }
 
