@@ -22,7 +22,6 @@ typedef struct tPrececessores
     int list[MAX_QTD_TAREFAS];
 } Prececessores;
 
-
 // Variaveis leitura
 char linha[100];
 int qtdTarefas;
@@ -39,6 +38,13 @@ int tempoFim[MAX_QTD_TAREFAS];
 int maiorDuracaoTarefas[2][MAX_QTD_TAREFAS];
 int desvioPadraoDuracaoTarefas[2][MAX_QTD_TAREFAS];
 
+/* Posicão 0 [id tarefa]
+ * Posicão 1 [start_time]
+ * Posição 2 [end_time]
+ */
+int matriz_solucao_com_tempos[3][MAX_QTD_TAREFAS];
+int tarefas_entrar_matriz_solucao[2][MAX_QTD_TAREFAS];
+
 // Var usada abaixo no calcular
 int entraramList[MAX_QTD_TAREFAS];
 
@@ -52,10 +58,16 @@ int calcularTempoTarefa(int idTarefa, int predecessores[], int qtdPredecessores)
 
 void handleOrdenarTarefasPorSucessor();
 void calcularDuracaoTarefasMaisTempoPredecessores();
+void inserirNaSolucao();
 
 // Metodos utilitários
 bool verificarSeEstaContidoVetor(const int value, const int qtd, const int vetor[]);
 int findIndexByValue(const int value, const int qtd, const int vetor[]);
 tPrececessores getPredecessores(const int tarefa);
+
+void push_array(int id, int array[], int qtd);
+bool includes_array(int id, int array[], int qtd);
+void zerar_vetor(int *array, const int tamanho, const int value);
+void remover_elemento_matriz(int elemento, int* matriz, int linhas, int colunas);
 
 #endif // PMM_HPP_INCLUDED

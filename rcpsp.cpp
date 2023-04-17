@@ -14,12 +14,253 @@
 #define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
 
+void handleOrdenarTarefasTempo()
+{
+  bool flag = true;
+  int indexAux;
+  int qtdSucessorAux;
+  while (flag)
+  {
+    flag = false;
+    for (int i = 0; i < qtdTarefas - 1; i++)
+    {
+      if (tarefaQtdSucessores[1][i] > tarefaQtdSucessores[1][i + 1])
+      {
+        flag = true;
+        indexAux = tarefaQtdSucessores[0][i + 1];
+        qtdSucessorAux = tarefaQtdSucessores[1][i + 1];
+
+        tarefaQtdSucessores[0][i + 1] = tarefaQtdSucessores[0][i];
+        tarefaQtdSucessores[1][i + 1] = tarefaQtdSucessores[1][i];
+
+        tarefaQtdSucessores[0][i] = indexAux;
+        tarefaQtdSucessores[1][i] = qtdSucessorAux;
+      }
+    }
+  }
+}
+
+int matriz_tarefas_escalonamento[2][MAX_QTD_TAREFAS];
+
+bool todosPredecessoresJaEntraram(int idTarefa)
+{
+  tPrececessores predecessores = getPredecessores(idTarefa);
+  // zerar_vetor(predecessores.list, qtdTarefas, 0);
+  for (int j = 0; j < predecessores.qtdPrecedessores; j++)
+  {
+    int predecessor = predecessores.list[j];
+
+    // A segunda parte da condicional é para
+    if (!includes_array(predecessor, matriz_solucao_com_tempos[0], qtdTarefas) && predecessor != 0)
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool algumPredecessoresJaEntrou(int idTarefa)
+{
+  tPrececessores predecessores = getPredecessores(idTarefa);
+  zerar_vetor(predecessores.list, qtdTarefas, 0);
+  for (int j = 0; j < predecessores.qtdPrecedessores; j++)
+  {
+    int predecessor = predecessores.list[j];
+    if (includes_array(predecessor, matriz_solucao_com_tempos[0], qtdTarefas))
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+int getStartTimeTarefa(int idTarefa)
+{
+  // verifica se os predecessores entraram
+  // 1- caso entraram retorna o maior end-time dentre eles
+  if (!algumPredecessoresJaEntrou(idTarefa))
+  {
+    return 0;
+  }
+
+  tPrececessores predecessores = getPredecessores(idTarefa);
+  // zerar_vetor(predecessores.list, qtdTarefas, 0);
+
+  int maiorEndTime = 0;
+  for (int j = 0; j < predecessores.qtdPrecedessores; j++)
+  {
+    int predecessor = predecessores.list[j];
+
+    int idMatriz = findIndexByValue(predecessor, qtdTarefas, matriz_solucao_com_tempos[0]);
+
+    if (idMatriz != -1)
+    {
+      maiorEndTime = MAX(matriz_solucao_com_tempos[2][idMatriz], maiorEndTime);
+    }
+  }
+
+  return maiorEndTime;
+}
+
+// caso não entraram retorna 0
+
+void inserirTarefaNaSolucao(int idTarefa)
+{
+  int startTime = getStartTimeTarefa(idTarefa);
+
+  push_array(idTarefa, matriz_solucao_com_tempos[0], qtdTarefas);
+  push_array(startTime, matriz_solucao_com_tempos[1], qtdTarefas);
+  push_array(startTime + duracao[idTarefa], matriz_solucao_com_tempos[2], qtdTarefas);
+
+  // printf("Task: %d | Start time: %d", idTarefa, startTime);
+
+  printf("\n------------- Matriz de solução -------------\n");
+  for (int i = 0; i < 3; i++)
+  {
+    for (int j = 0; j < qtdTarefas; j++)
+    {
+      int value = matriz_solucao_com_tempos[i][j];
+      if (i == 0)
+      {
+        value = value + 1;
+      }
+      printf("%d ", value);
+    }
+    printf("\n");
+  }
+}
+
 int main(int argc, char *argv[])
 {
+  int seed = 10;
+  srand(seed);
+
   lerDados("./instancias/j10.sm");
   handleOrdenarTarefasPorSucessor();
-  calcularDuracaoTarefasMaisTempoPredecessores();
-  printf("Teste");
+  // calcularDuracaoTarefasMaisTempoPredecessores();
+  // memcpy(&maiorDuracaoTarefas[0], &tarefaQtdSucessores[0], sizeof(tarefaQtdSucessores[0]));
+
+  zerar_vetor(matriz_solucao_com_tempos[0], qtdTarefas, -1);
+  zerar_vetor(matriz_solucao_com_tempos[1], qtdTarefas, -1);
+  zerar_vetor(matriz_solucao_com_tempos[2], qtdTarefas, -1);
+
+  double alfa = 0.5;
+  int qtdEscalonamento = qtdTarefas;
+
+  zerar_vetor(matriz_tarefas_escalonamento[0], qtdEscalonamento, -1);
+  zerar_vetor(matriz_tarefas_escalonamento[1], qtdEscalonamento, 0);
+  memcpy(&matriz_tarefas_escalonamento[0], &tarefaQtdSucessores[0], sizeof(tarefaQtdSucessores[0]));
+
+  // Remove a ultima tarefa da solução
+  int colunaUltimo = findIndexByValue(qtdTarefas - 1, qtdEscalonamento, matriz_tarefas_escalonamento[0]);
+  // Remove a coluna com base no valor encontrado
+  if (colunaUltimo != -1)
+  {
+    for (int j = colunaUltimo; j < qtdEscalonamento; j++)
+    {
+      matriz_tarefas_escalonamento[0][j] = matriz_tarefas_escalonamento[0][j + 1];
+      matriz_tarefas_escalonamento[1][j] = matriz_tarefas_escalonamento[1][j + 1];
+    }
+    qtdEscalonamento--;
+  }
+
+  // Insere 0 na solução e remove o 0 da matriz de matriz_tarefas_escalonamento
+  inserirTarefaNaSolucao(0);
+  int colunaPrimeiro = findIndexByValue(0, qtdEscalonamento, matriz_tarefas_escalonamento[0]);
+  // Remove a coluna com base no valor encontrado
+  if (colunaPrimeiro != -1)
+  {
+    for (int j = colunaPrimeiro; j < qtdEscalonamento - 1; j++)
+    {
+      matriz_tarefas_escalonamento[0][j] = matriz_tarefas_escalonamento[0][j + 1];
+      matriz_tarefas_escalonamento[1][j] = matriz_tarefas_escalonamento[1][j + 1];
+    }
+    qtdEscalonamento--;
+  }
+
+  while (qtdEscalonamento > 0)
+  {
+    for (int i = 0; i < qtdEscalonamento; i++)
+    {
+      int idTarefa = matriz_tarefas_escalonamento[0][i];
+      bool predecessores_entraram = false;
+
+      tPrececessores predecessores = getPredecessores(idTarefa);
+      zerar_vetor(predecessores.list, qtdTarefas, 0);
+
+      if (!todosPredecessoresJaEntraram(idTarefa) && idTarefa != -1)
+      {
+        matriz_tarefas_escalonamento[1][i] = 10000 + i;
+      }
+      else
+      {
+        int maiorDuracao = 0;
+        for (int indexPredecessor = 0; indexPredecessor < predecessores.qtdPrecedessores; indexPredecessor++)
+        {
+          int idPredecessor = predecessores.list[indexPredecessor];
+          if (idPredecessor != 0)
+          {
+            maiorDuracao = MAX(duracao[idPredecessor], maiorDuracao);
+          }
+        }
+        matriz_tarefas_escalonamento[1][i] = maiorDuracao + duracao[idTarefa];
+      }
+    }
+
+    handleOrdenarTarefasTempo();
+
+    int qtdEscalonamentoLRC = ceil(qtdEscalonamento * alfa);
+
+    int idTarefaEscolhida = (rand() % qtdEscalonamentoLRC - 1) + 1;
+    int tarefaEscolhida = matriz_tarefas_escalonamento[0][idTarefaEscolhida];
+
+    printf("\n\nTarefa escolhida: %d", tarefaEscolhida + 1);
+    printf("\n------------- Matriz tarefas a entrar -------------\n");
+    for (int i = 0; i < 2; i++)
+    {
+      for (int j = 0; j < qtdEscalonamento; j++)
+      {
+        int value = matriz_tarefas_escalonamento[i][j];
+        if (i == 0)
+        {
+          value = value + 1;
+        }
+        printf("%d ", value);
+      }
+      printf("\n");
+    }
+
+    inserirTarefaNaSolucao(tarefaEscolhida);
+
+    int n = qtdEscalonamento;
+
+    int coluna = findIndexByValue(tarefaEscolhida, qtdEscalonamento, matriz_tarefas_escalonamento[0]);
+
+    // Remove a coluna com base no valor encontrado
+    if (coluna != -1)
+    {
+      for (int j = coluna; j < n - 1; j++)
+      {
+        matriz_tarefas_escalonamento[0][j] = matriz_tarefas_escalonamento[0][j + 1];
+        matriz_tarefas_escalonamento[1][j] = matriz_tarefas_escalonamento[1][j + 1];
+      }
+      n--;
+    }
+
+    qtdEscalonamento--;
+
+    // printf("\n------------- Matriz de escalonamento com tarefa removida -------------\n");
+    // for (int i = 0; i < 2; i++)
+    // {
+    //   for (int j = 0; j < qtdEscalonamento; j++)
+    //   {
+    //     printf("%d ", matriz_tarefas_escalonamento[i][j]);
+    //   }
+    //   printf("\n");
+    // }
+  }
 }
 
 /*
@@ -69,32 +310,6 @@ void calcularDuracaoTarefasMaisTempoPredecessores()
     maiorDuracaoTarefas[1][i] = calcularTempoTarefa(idAtual, predecessores.list, qtdPredecessores);
     printf("\nTempo %d \n", maiorDuracaoTarefas[1][i]);
   }
-}
-
-void push_array(int id, int array[], int qtd)
-{
-  for (int i = 0; i < qtd; i++)
-  {
-    if (array[i] == -1)
-    {
-      array[i] = id;
-
-      return;
-    }
-  }
-}
-
-bool includes_array(int id, int array[], int qtd)
-{
-  for (int i = 0; i < qtd; i++)
-  {
-    if (array[i] == id)
-    {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 int calcularTempoTarefa(int idTarefa, int predecessores[], int qtdPredecessores)
@@ -283,5 +498,36 @@ int findIndexByValue(const int value, const int qtd, const int vetor[])
     }
   }
 
+  return -1;
+}
+
+void push_array(int id, int array[], int qtd)
+{
+  for (int i = 0; i < qtd; i++)
+  {
+    if (array[i] == -1)
+    {
+      array[i] = id;
+
+      return;
+    }
+  }
+}
+
+bool includes_array(int id, int array[], int qtd)
+{
+  for (int i = 0; i < qtd; i++)
+  {
+    if (array[i] == id)
+    {
+      return true;
+    }
+  }
+
   return false;
+}
+
+void zerar_vetor(int *array, const int tamanho, const int value)
+{
+  memset(array, value, tamanho * sizeof(int));
 }
