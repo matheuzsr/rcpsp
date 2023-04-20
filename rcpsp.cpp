@@ -63,7 +63,7 @@ bool todosPredecessoresJaEntraram(int idTarefa)
 bool algumPredecessoresJaEntrou(int idTarefa)
 {
   tPrececessores predecessores = getPredecessores(idTarefa);
-  zerar_vetor(predecessores.list, qtdTarefas, 0);
+
   for (int j = 0; j < predecessores.qtdPrecedessores; j++)
   {
     int predecessor = predecessores.list[j];
@@ -76,17 +76,33 @@ bool algumPredecessoresJaEntrou(int idTarefa)
   return false;
 }
 
+int getMaiorEndTimeMatrizSolucao()
+{
+  int maiorTempo = 0;
+  int i = 0;
+  while (matriz_solucao_com_tempos[0][i] != -1)
+  {
+    if (matriz_solucao_com_tempos[2][i] > maiorTempo)
+    {
+      maiorTempo = matriz_solucao_com_tempos[2][i];
+    }
+
+    i++;
+  }
+
+  return maiorTempo;
+}
+
 int getStartTimeTarefa(int idTarefa)
 {
-  // verifica se os predecessores entraram
+  // verifica se os predecessores entraram caso não entraram retorna o maior
   // 1- caso entraram retorna o maior end-time dentre eles
   if (!algumPredecessoresJaEntrou(idTarefa))
   {
-    return 0;
+    return getMaiorEndTimeMatrizSolucao();
   }
 
   tPrececessores predecessores = getPredecessores(idTarefa);
-  // zerar_vetor(predecessores.list, qtdTarefas, 0);
 
   int maiorEndTime = 0;
   for (int j = 0; j < predecessores.qtdPrecedessores; j++)
@@ -119,7 +135,7 @@ void inserirTarefaNaSolucao(int idTarefa)
   printf("\n------------- Matriz de solução -------------\n");
   for (int i = 0; i < 3; i++)
   {
-    for (int j = 0; j < qtdTarefas; j++)
+    for (int j = 0; j < qtdTarefas - 1; j++)
     {
       int value = matriz_solucao_com_tempos[i][j];
       if (i == 0)
@@ -134,7 +150,7 @@ void inserirTarefaNaSolucao(int idTarefa)
 
 int main(int argc, char *argv[])
 {
-  int seed = 10;
+  int seed = 8; // time(NULL)
   srand(seed);
 
   lerDados("./instancias/j10.sm");
@@ -209,7 +225,28 @@ int main(int argc, char *argv[])
       }
     }
 
-    handleOrdenarTarefasTempo();
+    bool flag = true;
+    int indexAux;
+    int qtdSucessorAux;
+    while (flag)
+    {
+      flag = false;
+      for (int i = 0; i < qtdEscalonamento; i++)
+      {
+        if (matriz_tarefas_escalonamento[1][i] > matriz_tarefas_escalonamento[1][i] && (i + 1) < qtdEscalonamento)
+        {
+          flag = true;
+          indexAux = matriz_tarefas_escalonamento[0][i + 1];
+          qtdSucessorAux = matriz_tarefas_escalonamento[1][i + 1];
+
+          matriz_tarefas_escalonamento[0][i + 1] = matriz_tarefas_escalonamento[0][i];
+          matriz_tarefas_escalonamento[1][i + 1] = matriz_tarefas_escalonamento[1][i];
+
+          matriz_tarefas_escalonamento[0][i] = indexAux;
+          matriz_tarefas_escalonamento[1][i] = qtdSucessorAux;
+        }
+      }
+    }
 
     int qtdEscalonamentoLRC = ceil(qtdEscalonamento * alfa);
 
@@ -250,16 +287,6 @@ int main(int argc, char *argv[])
     }
 
     qtdEscalonamento--;
-
-    // printf("\n------------- Matriz de escalonamento com tarefa removida -------------\n");
-    // for (int i = 0; i < 2; i++)
-    // {
-    //   for (int j = 0; j < qtdEscalonamento; j++)
-    //   {
-    //     printf("%d ", matriz_tarefas_escalonamento[i][j]);
-    //   }
-    //   printf("\n");
-    // }
   }
 }
 
