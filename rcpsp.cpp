@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
   int seed = 8; // time(NULL)
   srand(seed);
 
-  lerDados("./instancias/j10.sm");
+  lerDados("./instancias/j12060_7.sm");
   handleOrdenarTarefasPorSucessor();
   // calcularDuracaoTarefasMaisTempoPredecessores();
   // memcpy(&maiorDuracaoTarefas[0], &tarefaQtdSucessores[0], sizeof(tarefaQtdSucessores[0]));
@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
 
       if (!todosPredecessoresJaEntraram(idTarefa) && idTarefa != -1)
       {
-        matriz_tarefas_escalonamento[1][i] = 10000 + i;
+        matriz_tarefas_escalonamento[1][i] = PESO_PENALIZACAO_PRECEDENCIA + i;
       }
       else
       {
@@ -250,8 +250,15 @@ int main(int argc, char *argv[])
 
     int qtdEscalonamentoLRC = ceil(qtdEscalonamento * alfa);
 
-    int idTarefaEscolhida = (rand() % qtdEscalonamentoLRC - 1) + 1;
-    int tarefaEscolhida = matriz_tarefas_escalonamento[0][idTarefaEscolhida];
+    // Fazendo valer regra de PRECEDENCIA
+    int tempoTarefaEscolhida = PESO_PENALIZACAO_PRECEDENCIA;
+    int tarefaEscolhida = -1;
+    while (tempoTarefaEscolhida >= PESO_PENALIZACAO_PRECEDENCIA)
+    {
+      int idTarefaEscolhida = (rand() % qtdEscalonamentoLRC - 1) + 1;
+      tarefaEscolhida = matriz_tarefas_escalonamento[0][idTarefaEscolhida];
+      tempoTarefaEscolhida = matriz_tarefas_escalonamento[1][idTarefaEscolhida];
+    }
 
     printf("\n\nTarefa escolhida: %d", tarefaEscolhida + 1);
     printf("\n------------- Matriz tarefas a entrar -------------\n");
@@ -288,6 +295,7 @@ int main(int argc, char *argv[])
 
     qtdEscalonamento--;
   }
+  // TODO: Validar inclusão aqui do código para pegar tempo do maior na solução
 }
 
 /*
