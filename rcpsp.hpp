@@ -60,6 +60,12 @@ void handleOrdenarTarefasPorSucessor();
 void calcularDuracaoTarefasMaisTempoPredecessores();
 void inserirNaSolucao();
 
+
+//FO
+int calcularFO();
+int calcularFOPrecedencia();
+int calcularFORecurso();
+
 // Metodos utilitários
 bool verificarSeEstaContidoVetor(const int value, const int qtd, const int vetor[]);
 int findIndexByValue(const int value, const int qtd, const int vetor[]);

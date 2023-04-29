@@ -42,16 +42,16 @@ void handleOrdenarTarefasTempo()
 
 int matriz_tarefas_escalonamento[2][MAX_QTD_TAREFAS];
 
-bool todosPredecessoresJaEntraram(int idTarefa)
+bool todosPredecessoresJaEntraram(int idTarefa, int qtdTarefasAnalizar)
 {
   tPrececessores predecessores = getPredecessores(idTarefa);
-  // zerar_vetor(predecessores.list, qtdTarefas, 0);
+
   for (int j = 0; j < predecessores.qtdPrecedessores; j++)
   {
     int predecessor = predecessores.list[j];
 
     // A segunda parte da condicional é para
-    if (!includes_array(predecessor, matriz_solucao_com_tempos[0], qtdTarefas) && predecessor != 0)
+    if (!includes_array(predecessor, matriz_solucao_com_tempos[0], qtdTarefasAnalizar) && predecessor != 0)
     {
       return false;
     }
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
       tPrececessores predecessores = getPredecessores(idTarefa);
       zerar_vetor(predecessores.list, qtdTarefas, 0);
 
-      if (!todosPredecessoresJaEntraram(idTarefa) && idTarefa != -1)
+      if (!todosPredecessoresJaEntraram(idTarefa, qtdTarefas) && idTarefa != -1)
       {
         matriz_tarefas_escalonamento[1][i] = PESO_PENALIZACAO_PRECEDENCIA + i;
       }
@@ -296,6 +296,7 @@ int main(int argc, char *argv[])
     qtdEscalonamento--;
   }
   // TODO: Validar inclusão aqui do código para pegar tempo do maior na solução
+  calcularFOPrecedencia();
 }
 
 /*
@@ -385,6 +386,27 @@ tPrececessores getPredecessores(const int tarefa)
   }
 
   return predecessores;
+}
+
+int calcularFOPrecedencia()
+{
+  int penalizacaoPrecedencia = 0;
+
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    int idTarefa = matriz_solucao_com_tempos[0][i];
+
+    // tPrececessores predecessores = getPredecessores(idTarefa);
+    // zerar_vetor(predecessores.list, qtdTarefas, 0);
+
+    if (!todosPredecessoresJaEntraram(idTarefa, i))
+    {
+      penalizacaoPrecedencia++;
+    }
+  }
+  printf("\n Penaliza precedencia: %d \n", penalizacaoPrecedencia);
+
+  return penalizacaoPrecedencia;
 }
 
 // Leitura
