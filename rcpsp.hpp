@@ -5,6 +5,7 @@
 #define MAX_QTD_TAREFAS 200
 #define PESO_PENALIZACAO_PRECEDENCIA 100000
 #define PESO_PENALIZACAO_RECURSOS 100
+#define TEMPO_MAXIMO 10000
 
 #include <string>
 
@@ -31,19 +32,22 @@ int recursoDisponivel[MAX_QTD_RECURSO];
 int matrizRelacoesSucessores[MAX_QTD_TAREFAS][MAX_QTD_TAREFAS];
 int tarefaQtdSucessores[2][MAX_QTD_TAREFAS];
 int consumoRecursos[MAX_QTD_TAREFAS][MAX_QTD_RECURSO];
+int matriz_tarefas_escalonamento[2][MAX_QTD_TAREFAS];
 
 // Variaveis de uso
 int tempoInicio[MAX_QTD_TAREFAS];
 int tempoFim[MAX_QTD_TAREFAS];
 int maiorDuracaoTarefas[2][MAX_QTD_TAREFAS];
 int desvioPadraoDuracaoTarefas[2][MAX_QTD_TAREFAS];
+int tarefas_entrar_matriz_solucao[2][MAX_QTD_TAREFAS];
 
 /* Posicão 0 [id tarefa]
  * Posicão 1 [start_time]
  * Posição 2 [end_time]
  */
 int matriz_solucao_com_tempos[3][MAX_QTD_TAREFAS];
-int tarefas_entrar_matriz_solucao[2][MAX_QTD_TAREFAS];
+int matriz_solucao_tarefas_tempo[MAX_QTD_TAREFAS][TEMPO_MAXIMO];
+int matriz_solucao_recursos_consumidos_tempo[MAX_QTD_RECURSO][TEMPO_MAXIMO];
 
 // Var usada abaixo no calcular
 int entraramList[MAX_QTD_TAREFAS];
@@ -59,7 +63,12 @@ int calcularTempoTarefa(int idTarefa, int predecessores[], int qtdPredecessores)
 void handleOrdenarTarefasPorSucessor();
 void calcularDuracaoTarefasMaisTempoPredecessores();
 void inserirNaSolucao();
+void preencherMatrizBinariaTarefaTempo(int tarefa, int startTime);
+void preencherMatrizRecursoTempo(int tarefa, int startTime);
 
+
+//Heuristica
+void handleHeuristicaConstrutiva(double alfa);
 
 //FO
 int calcularFO();
