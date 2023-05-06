@@ -14,32 +14,6 @@
 #define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
 
-void handleOrdenarTarefasTempo()
-{
-  bool flag = true;
-  int indexAux;
-  int qtdSucessorAux;
-  while (flag)
-  {
-    flag = false;
-    for (int i = 0; i < qtdTarefas - 1; i++)
-    {
-      if (tarefaQtdSucessores[1][i] > tarefaQtdSucessores[1][i + 1])
-      {
-        flag = true;
-        indexAux = tarefaQtdSucessores[0][i + 1];
-        qtdSucessorAux = tarefaQtdSucessores[1][i + 1];
-
-        tarefaQtdSucessores[0][i + 1] = tarefaQtdSucessores[0][i];
-        tarefaQtdSucessores[1][i + 1] = tarefaQtdSucessores[1][i];
-
-        tarefaQtdSucessores[0][i] = indexAux;
-        tarefaQtdSucessores[1][i] = qtdSucessorAux;
-      }
-    }
-  }
-}
-
 bool todosPredecessoresJaEntraram(int idTarefa, int qtdTarefasAnalizar)
 {
   tPrececessores predecessores = getPredecessores(idTarefa);
@@ -118,11 +92,57 @@ int getStartTimeTarefa(int idTarefa)
   return maiorEndTime;
 }
 
-// caso não entraram retorna 0
+bool atendeProximas(int idTarefa, const int inicio, int fim)
+{
+  for (int i = inicio; i < fim; i++)
+  {
+    for (int j = 0; j < qtdRecursos; j++)
+    {
+      int consumoTarefaParaEntrar = consumoRecursos[idTarefa][j];
+      int consumoAtualDoTempo = matriz_solucao_recursos_consumidos_tempo[j][i];
+      if (consumoAtualDoTempo + consumoTarefaParaEntrar > recursoDisponivel[j])
+      {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+int getStarTimeShiftTimeSolucaoPorCausaRecurso(int idTarefa)
+{
+  int startTime = getStartTimeTarefa(idTarefa);
+
+  for (int i = startTime; i < TEMPO_MAXIMO; i++)
+  {
+    int qtdRecursosAtendidos = 0;
+    for (int j = 0; j < qtdRecursos; j++)
+    {
+      int consumoTarefaParaEntrar = consumoRecursos[idTarefa][j];
+      int duracaoTarefaParaEntrar = duracao[idTarefa];
+      int consumoAtualDoTempo = matriz_solucao_recursos_consumidos_tempo[j][i];
+
+      if ((consumoAtualDoTempo + consumoTarefaParaEntrar <= recursoDisponivel[j]) && atendeProximas(idTarefa, i, i + duracaoTarefaParaEntrar))
+      {
+        qtdRecursosAtendidos++;
+      }
+    }
+
+    if (qtdRecursosAtendidos == qtdRecursos)
+    {
+      if (startTime != i)
+      {
+        printf("\nEra %d, agr é %d", startTime, i);
+      }
+      return i;
+    }
+  }
+}
 
 void inserirTarefaNaSolucao(int idTarefa)
 {
-  int startTime = getStartTimeTarefa(idTarefa);
+  int startTime = getStarTimeShiftTimeSolucaoPorCausaRecurso(idTarefa);
 
   push_array(idTarefa, matriz_solucao_com_tempos[0], qtdTarefas);
   push_array(startTime, matriz_solucao_com_tempos[1], qtdTarefas);
@@ -133,7 +153,7 @@ void inserirTarefaNaSolucao(int idTarefa)
   printf("\n------------- Matriz de solução -------------\n");
   for (int i = 0; i < 3; i++)
   {
-    for (int j = 0; j < qtdTarefas - 1; j++)
+    for (int j = 0; j < qtdTarefas; j++)
     {
       int value = matriz_solucao_com_tempos[i][j];
       if (i == 0)
@@ -168,7 +188,7 @@ int main(int argc, char *argv[])
 
   for (int i = 0; i < qtdTarefas; i++)
   {
-    zerar_vetor(matriz_solucao_tarefas_tempo[i], TEMPO_MAXIMO, -1);
+    zerar_vetor(matriz_solucao_com_tempos[i], TEMPO_MAXIMO, -1);
   }
 
   memcpy(&matriz_tarefas_escalonamento[0], &tarefaQtdSucessores[0], sizeof(tarefaQtdSucessores[0]));
@@ -245,7 +265,7 @@ void handleHeuristicaConstrutiva(double alfa)
       flag = false;
       for (int i = 0; i < qtdEscalonamento; i++)
       {
-        if (matriz_tarefas_escalonamento[1][i] > matriz_tarefas_escalonamento[1][i] && (i + 1) < qtdEscalonamento)
+        if (matriz_tarefas_escalonamento[1][i] > matriz_tarefas_escalonamento[1][i + 1] && (i + 1) < qtdEscalonamento)
         {
           flag = true;
           indexAux = matriz_tarefas_escalonamento[0][i + 1];
@@ -272,63 +292,16 @@ void handleHeuristicaConstrutiva(double alfa)
       tempoTarefaEscolhida = matriz_tarefas_escalonamento[1][idTarefaEscolhida];
     }
 
+    printf("\n\nTarefa escolhida: %d", tarefaEscolhida + 1);
+
     // Fazendo valer regra de RECURSO
     // não pode estrapolar recursoDisponivel
     // gasto por cada tarefa consumoRecursos
     int idColuna = findIndexByValue(tarefaEscolhida, qtdEscalonamento, matriz_tarefas_escalonamento[0]);
-    int startTimeComShift = tempoTarefaEscolhida;
-    bool encontrouLocalCorretoParaEntrar = false;
-    for (int i = tempoTarefaEscolhida; i < TEMPO_MAXIMO; i++)
-    {
-      bool todosRecursosAtendidos = true;
-      for (int j = 0; j < qtdRecursos; j++)
-      {
-        int consumoTarefaParaEntrar = consumoRecursos[tarefaEscolhida][j];
-        int consumoDoTempo = matriz_solucao_recursos_consumidos_tempo[j][i];
-        if (consumoDoTempo + consumoTarefaParaEntrar > recursoDisponivel[j])
-        {
-          todosRecursosAtendidos = false;
-        }
-      }
-
-      if (todosRecursosAtendidos)
-      {
-        startTimeComShift = i;
-        break;
-      }
-    }
-
-    if (startTimeComShift != tempoTarefaEscolhida)
-    {
-      int endTimeComShift = startTimeComShift + duracao[tarefaEscolhida];
-      matriz_tarefas_escalonamento[1][idColuna] = startTimeComShift;
-      matriz_tarefas_escalonamento[2][idColuna] = endTimeComShift;
-      printf("\nPen rec: T%d | iria entrar: %d | entrou: %d\n", tarefaEscolhida, tempoTarefaEscolhida, startTimeComShift);
-    }
-
-    tempoTarefaEscolhida = startTimeComShift;
-
-    // matriz_solucao_recursos_consumidos_tempo
-
-    printf("\n\nTarefa escolhida: %d", tarefaEscolhida + 1);
-    printf("\n------------- Matriz tarefas a entrar -------------\n");
-    for (int i = 0; i < 2; i++)
-    {
-      for (int j = 0; j < qtdEscalonamento; j++)
-      {
-        int value = matriz_tarefas_escalonamento[i][j];
-        if (i == 0)
-        {
-          value = value + 1;
-        }
-        printf("%d ", value);
-      }
-      printf("\n");
-    }
-
     inserirTarefaNaSolucao(tarefaEscolhida);
 
-    int startTimeTarefaEscolhida = matriz_tarefas_escalonamento[1][idColuna];
+    int indexSolucao = findIndexByValue(tarefaEscolhida, qtdTarefas, matriz_solucao_com_tempos[0]);
+    int startTimeTarefaEscolhida = matriz_solucao_com_tempos[1][indexSolucao];
     // preencherMatrizBinariaTarefaTempo(tarefaEscolhida, startTimeTarefaEscolhida);
     preencherMatrizRecursoTempo(tarefaEscolhida, startTimeTarefaEscolhida);
 
@@ -344,21 +317,22 @@ void handleHeuristicaConstrutiva(double alfa)
       n--;
     }
 
-    printf("\n------------- Matriz Recurso Tempo -------------\n");
-    for (int i = 0; i < qtdRecursos; i++)
-    {
-      for (int j = 0; j < 50; j++)
-      {
-        int value = matriz_solucao_recursos_consumidos_tempo[i][j];
-        printf("%d ", value);
-      }
-      printf("\n");
-    }
-
     qtdEscalonamento--;
   }
   // TODO: Validar inclusão aqui do código para pegar tempo do maior na solução
+  inserirTarefaNaSolucao(11);
   calcularFOPrecedencia();
+
+  printf("\n------------- Matriz Recurso Tempo -------------\n");
+  for (int i = 0; i < qtdRecursos; i++)
+  {
+    for (int j = 0; j < 50; j++)
+    {
+      int value = matriz_solucao_recursos_consumidos_tempo[i][j];
+      printf("%d ", value);
+    }
+    printf("\n");
+  }
 }
 
 // void preencherMatrizBinariaTarefaTempo(int tarefa, int startTime)
@@ -366,14 +340,14 @@ void handleHeuristicaConstrutiva(double alfa)
 //   int endTime = startTime + duracao[tarefa];
 //   for (int i = startTime; i <= endTime; i++)
 //   {
-//     matriz_solucao_tarefas_tempo[tarefa][i] = 1;
+//     matriz_solucao_com_tempos[tarefa][i] = 1;
 //   }
 // }
 
 void preencherMatrizRecursoTempo(int tarefa, int startTime)
 {
   int endTime = startTime + duracao[tarefa];
-  for (int i = startTime; i <= endTime; i++)
+  for (int i = startTime; i <= endTime - 1; i++)
     for (int recurso = 0; recurso <= qtdRecursos; recurso++)
     {
       {
@@ -482,9 +456,6 @@ int calcularFOPrecedencia()
   for (int i = 0; i < qtdTarefas; i++)
   {
     int idTarefa = matriz_solucao_com_tempos[0][i];
-
-    // tPrececessores predecessores = getPredecessores(idTarefa);
-    // zerar_vetor(predecessores.list, qtdTarefas, 0);
 
     if (!todosPredecessoresJaEntraram(idTarefa, i))
     {
