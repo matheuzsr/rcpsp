@@ -11,10 +11,9 @@
 
 typedef struct tSolucao
 {
-    int tarefasStartTime[2][MAX_QTD_TAREFAS];
-    int qtdTarefas;
+    int matriz_solucao_com_tempos[3][MAX_QTD_TAREFAS];
+    int matriz_solucao_recursos_consumidos_tempo[MAX_QTD_RECURSO][TEMPO_MAXIMO];
     int funObj;
-    int makespan;
 } Solucao;
 
 typedef struct tPrececessores
@@ -38,7 +37,6 @@ int matriz_tarefas_escalonamento[2][MAX_QTD_TAREFAS];
 int tempoInicio[MAX_QTD_TAREFAS];
 int tempoFim[MAX_QTD_TAREFAS];
 int maiorDuracaoTarefas[2][MAX_QTD_TAREFAS];
-int desvioPadraoDuracaoTarefas[2][MAX_QTD_TAREFAS];
 int tarefas_entrar_matriz_solucao[2][MAX_QTD_TAREFAS];
 
 /* Posicão 0 [id tarefa]
@@ -67,13 +65,17 @@ void preencherMatrizBinariaTarefaTempo(int tarefa, int startTime);
 void preencherMatrizRecursoTempo(int tarefa, int startTime);
 
 
-//Heuristica
+//Heuristica construtiva
 void handleHeuristicaConstrutiva(double alfa);
 
+void simulated_annealing(Solucao &solucao_inicial, int temp_inicial, int temp_final, double taxa_resf, int num_sol_viz);
+Solucao gerar_vizinho(Solucao solucao_atual);
+
 //FO
-int calcularFO();
-int calcularFOPrecedencia();
-int calcularFORecurso();
+int calcularFO(Solucao &s);
+int calcularFOPrecedencia(Solucao &s);
+int calcularFORecurso(Solucao &s);
+bool todosPredecessoresJaEntraram(int idTarefa, int qtdTarefasAnalizar, int *vetor);
 
 // Metodos utilitários
 bool verificarSeEstaContidoVetor(const int value, const int qtd, const int vetor[]);
