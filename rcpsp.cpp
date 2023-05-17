@@ -175,6 +175,10 @@ int main(int argc, char *argv[])
   memcpy(&matriz_tarefas_escalonamento[0], &tarefaQtdSucessores[0], sizeof(tarefaQtdSucessores[0]));
 
   double alfa = 0.5;
+  //Solucao Smelhor;
+  //int FOmelhor = 100000;
+  //tempoatual = 0;
+  //while(tempoatual < tempolimite)
   handleHeuristicaConstrutiva(alfa);
 
   Solucao s;
@@ -193,6 +197,11 @@ int main(int argc, char *argv[])
   double taxa_resf = 0.995;
   int num_sol_viz = 100;
   simulated_annealing(s, temp_inicial, temp_final, taxa_resf, num_sol_viz);
+  //if (FOSoluçaoretornadadoSA < FOmelhor){
+     //FOMelhor = FOSoluçaoretornadadoSA;
+     //Smelhor = SoluçaoretornadadoSA;
+  //}
+  //}
 }
 
 void handleHeuristicaConstrutiva(double alfa)
@@ -532,11 +541,11 @@ void simulated_annealing(Solucao solucao_inicial, double temp_inicial, double te
   Solucao solucao_melhor = solucao_inicial;
   Solucao solucao_atual = solucao_inicial;
 
-  while (true)
+  while (temp < temp_final)
   {
     for (int i = 0; i < num_sol_viz; i++)
     {
-      Solucao solucao_vizinha = gerar_vizinho_tempo(solucao_atual);
+      Solucao solucao_vizinha = gerar_vizinho(solucao_atual);
 
       int dif_fo = solucao_vizinha.funObj - solucao_atual.funObj;
 
@@ -565,10 +574,10 @@ void simulated_annealing(Solucao solucao_inicial, double temp_inicial, double te
 
     temp = temp * taxa_resf;
 
-    if (temp < temp_final)
-    {
-      temp = temp_inicial;
-    }
+    //if (temp < temp_final)
+    //{
+      //temp = temp_inicial;
+    //}
     // printf("\nMelhor FO: %d", solucao_melhor.funObj);
   }
 }
@@ -631,7 +640,7 @@ Solucao gerar_vizinho(Solucao solucao_atual)
   while (!pode_entrar_alguem)
   {
     num_aleat_1 = rand() % (qtdTarefas - 1) + 1;
-    num_aleat_2 = (rand() % (11 - num_aleat_1 + 1)) + num_aleat_1;
+    num_aleat_2 = (rand() % ((qtdTarefas-1) - num_aleat_1 + 1)) + num_aleat_1;
 
     while (num_aleat_1 == num_aleat_2)
     {
