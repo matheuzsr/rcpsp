@@ -22,6 +22,12 @@ typedef struct tPrececessores
     int list[MAX_QTD_TAREFAS];
 } Prececessores;
 
+typedef struct tSucessores
+{
+    int qtdSucessores;
+    int list[MAX_QTD_TAREFAS];
+} Sucessores;
+
 // Variaveis leitura
 char linha[100];
 int qtdTarefas;
@@ -68,8 +74,11 @@ void preencherMatrizRecursoTempo(int tarefa, int startTime);
 //Heuristica construtiva
 void handleHeuristicaConstrutiva(double alfa);
 
-void simulated_annealing(Solucao &solucao_inicial, int temp_inicial, int temp_final, double taxa_resf, int num_sol_viz);
+void simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz);
 Solucao gerar_vizinho(Solucao solucao_atual);
+Solucao gerar_vizinho_tempo(Solucao solucao_atual);
+void remover_uso_recursos(Solucao &solucao_atual, int index_tarefa);
+void inserir_uso_recursos(Solucao &solucao_atual, int index_tarefa);
 
 //FO
 int calcularFO(Solucao &s);
@@ -81,6 +90,8 @@ bool todosPredecessoresJaEntraram(int idTarefa, int qtdTarefasAnalizar, int *vet
 bool verificarSeEstaContidoVetor(const int value, const int qtd, const int vetor[]);
 int findIndexByValue(const int value, const int qtd, const int vetor[]);
 tPrececessores getPredecessores(const int tarefa);
+tSucessores getSucessores(const int tarefa);
+void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
 
 void push_array(int id, int array[], int qtd);
 bool includes_array(int id, int array[], int qtd);
