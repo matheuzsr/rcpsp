@@ -70,17 +70,18 @@ void inserirNaSolucao();
 void preencherMatrizBinariaTarefaTempo(int tarefa, int startTime);
 void preencherMatrizRecursoTempo(int tarefa, int startTime);
 
-
-//Heuristica construtiva
+// Heuristica GRASP
+void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, char instancia[], int seed);
+// Heuristica construtiva
 void handleHeuristicaConstrutiva(double alfa);
 
-void simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz);
+Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz);
 Solucao gerar_vizinho(Solucao solucao_atual);
 Solucao gerar_vizinho_tempo(Solucao solucao_atual);
 void remover_uso_recursos(Solucao &solucao_atual, int index_tarefa);
 void inserir_uso_recursos(Solucao &solucao_atual, int index_tarefa);
 
-//FO
+// FO
 int calcularFO(Solucao &s);
 int calcularFOPrecedencia(Solucao &s);
 int calcularFORecurso(Solucao &s);
@@ -92,10 +93,14 @@ int findIndexByValue(const int value, const int qtd, const int vetor[]);
 tPrececessores getPredecessores(const int tarefa);
 tSucessores getSucessores(const int tarefa);
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
+void escreverSolucao(Solucao &solucao, std::string arq);
+
+//Metricas
+void escreverMetricas(Solucao &solucao, std::string arq, double tempo_gasto, char instancia[], int seed);
 
 void push_array(int id, int array[], int qtd);
 bool includes_array(int id, int array[], int qtd);
 void zerar_vetor(int *array, const int tamanho, const int value);
-void remover_elemento_matriz(int elemento, int* matriz, int linhas, int colunas);
+void remover_elemento_matriz(int elemento, int *matriz, int linhas, int colunas);
 
 #endif // PMM_HPP_INCLUDED

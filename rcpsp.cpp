@@ -11,6 +11,8 @@
 
 #include <string.h>
 
+#define MODO_DEBUG true
+
 #define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
 
@@ -115,7 +117,9 @@ int getStarTimeShiftTimeSolucaoPorCausaRecurso(int idTarefa)
     {
       if (startTime != i)
       {
+#ifdef MODO_DEBUG
         printf("\nEra %d, agr é %d", startTime, i);
+#endif
       }
       return i;
     }
@@ -132,6 +136,7 @@ void inserirTarefaNaSolucao(int idTarefa)
 
   // printf("Task: %d | Start time: %d", idTarefa, startTime);
 
+#ifdef MODO_DEBUG
   printf("\n------------- Matriz de solução -------------\n");
   for (int i = 0; i < 3; i++)
   {
@@ -146,62 +151,85 @@ void inserirTarefaNaSolucao(int idTarefa)
     }
     printf("\n");
   }
+#endif
 }
 
 int main(int argc, char *argv[])
 {
-  int seed = 1684285591; // time(NULL);
+  int seed = time(NULL); // time(NULL); 1684285591
   srand(seed);
-  lerDados("./instancias/j10.sm");
-  handleOrdenarTarefasPorSucessor();
+  lerDados("./instancias/j12060_10.sm");
+  char instancia[] = "j12060_10.sm";
+  // Trocar por std::string
 
-  zerar_vetor(matriz_solucao_com_tempos[0], qtdTarefas, -1);
-  zerar_vetor(matriz_solucao_com_tempos[1], qtdTarefas, -1);
-  zerar_vetor(matriz_solucao_com_tempos[2], qtdTarefas, -1);
+  double tempo_limite = 5 * 60;
+  double tempo_melhor, tempo_total;
 
-  zerar_vetor(matriz_tarefas_escalonamento[0], qtdTarefas, -1);
-  zerar_vetor(matriz_tarefas_escalonamento[1], qtdTarefas, 0);
+  double alfa = 0.995;
+  heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total,instancia, seed);
+}
 
-  for (int i = 0; i < qtdRecursos; i++)
+void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, char instancia[], int seed)
+{
+  Solucao solucao_melhor_global;
+  solucao_melhor_global.funObj = 99999;
+
+  clock_t hI, hF;
+  tempo_total = tempo_melhor = 0;
+  hI = clock();
+
+  while (tempo_total < tempo_limite)
   {
-    zerar_vetor(matriz_solucao_recursos_consumidos_tempo[i], TEMPO_MAXIMO, 0);
+    // TODO Trazer esse cara para junto do handleHeuristicaConstrutiva(alfa);
+    handleOrdenarTarefasPorSucessor();
+
+    zerar_vetor(matriz_solucao_com_tempos[0], qtdTarefas, -1);
+    zerar_vetor(matriz_solucao_com_tempos[1], qtdTarefas, -1);
+    zerar_vetor(matriz_solucao_com_tempos[2], qtdTarefas, -1);
+
+    zerar_vetor(matriz_tarefas_escalonamento[0], qtdTarefas, -1);
+    zerar_vetor(matriz_tarefas_escalonamento[1], qtdTarefas, 0);
+
+    for (int i = 0; i < qtdRecursos; i++)
+    {
+      zerar_vetor(matriz_solucao_recursos_consumidos_tempo[i], TEMPO_MAXIMO, 0);
+    }
+
+    for (int i = 0; i < qtdTarefas; i++)
+    {
+      zerar_vetor(matriz_solucao_com_tempos[i], TEMPO_MAXIMO, -1);
+    }
+
+    memcpy(&matriz_tarefas_escalonamento[0], &tarefaQtdSucessores[0], sizeof(tarefaQtdSucessores[0]));
+
+    handleHeuristicaConstrutiva(alfa);
+
+    Solucao solucao_construtiva;
+    memcpy(&solucao_construtiva.matriz_solucao_com_tempos[0], &matriz_solucao_com_tempos[0], sizeof(matriz_solucao_com_tempos[0]));
+    memcpy(&solucao_construtiva.matriz_solucao_com_tempos[1], &matriz_solucao_com_tempos[1], sizeof(matriz_solucao_com_tempos[1]));
+    memcpy(&solucao_construtiva.matriz_solucao_com_tempos[2], &matriz_solucao_com_tempos[2], sizeof(matriz_solucao_com_tempos[2]));
+
+    for (int j = 0; j < qtdRecursos; j++)
+    {
+      memcpy(&solucao_construtiva.matriz_solucao_recursos_consumidos_tempo[j], &matriz_solucao_recursos_consumidos_tempo[j], sizeof(matriz_solucao_recursos_consumidos_tempo[j]));
+    }
+    solucao_construtiva.funObj = calcularFO(solucao_construtiva);
+
+    // Busca local
+    double temp_inicial = 100;
+    double temp_final = 0.01;
+    double taxa_resf = 0.995;
+    int num_sol_viz = 100;
+    simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz);
+
+    if (solucao_construtiva.funObj < solucao_melhor_global.funObj)
+    {
+      hF = clock();
+      tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+      copiarSolucao(solucao_melhor_global, solucao_construtiva);
+      escreverMetricas(solucao_melhor_global, "./metricas/metrica.sol", tempo_melhor, instancia, seed);
+    }
   }
-
-  for (int i = 0; i < qtdTarefas; i++)
-  {
-    zerar_vetor(matriz_solucao_com_tempos[i], TEMPO_MAXIMO, -1);
-  }
-
-  memcpy(&matriz_tarefas_escalonamento[0], &tarefaQtdSucessores[0], sizeof(tarefaQtdSucessores[0]));
-
-  double alfa = 0.5;
-  //Solucao Smelhor;
-  //int FOmelhor = 100000;
-  //tempoatual = 0;
-  //while(tempoatual < tempolimite)
-  handleHeuristicaConstrutiva(alfa);
-
-  Solucao s;
-  memcpy(&s.matriz_solucao_com_tempos[0], &matriz_solucao_com_tempos[0], sizeof(matriz_solucao_com_tempos[0]));
-  memcpy(&s.matriz_solucao_com_tempos[1], &matriz_solucao_com_tempos[1], sizeof(matriz_solucao_com_tempos[1]));
-  memcpy(&s.matriz_solucao_com_tempos[2], &matriz_solucao_com_tempos[2], sizeof(matriz_solucao_com_tempos[2]));
-
-  for (int j = 0; j < qtdRecursos; j++)
-  {
-    memcpy(&s.matriz_solucao_recursos_consumidos_tempo[j], &matriz_solucao_recursos_consumidos_tempo[j], sizeof(matriz_solucao_recursos_consumidos_tempo[j]));
-  }
-  s.funObj = calcularFO(s);
-
-  double temp_inicial = 100;
-  double temp_final = 0.01;
-  double taxa_resf = 0.995;
-  int num_sol_viz = 100;
-  simulated_annealing(s, temp_inicial, temp_final, taxa_resf, num_sol_viz);
-  //if (FOSoluçaoretornadadoSA < FOmelhor){
-     //FOMelhor = FOSoluçaoretornadadoSA;
-     //Smelhor = SoluçaoretornadadoSA;
-  //}
-  //}
 }
 
 void handleHeuristicaConstrutiva(double alfa)
@@ -298,9 +326,9 @@ void handleHeuristicaConstrutiva(double alfa)
       tarefaEscolhida = matriz_tarefas_escalonamento[0][idTarefaEscolhida];
       tempoTarefaEscolhida = matriz_tarefas_escalonamento[1][idTarefaEscolhida];
     }
-
+#ifdef MODO_DEBUG
     printf("\n\nTarefa escolhida: %d", tarefaEscolhida + 1);
-
+#endif
     // Fazendo valer regra de RECURSO
     // não pode estrapolar recursoDisponivel
     // gasto por cada tarefa consumoRecursos
@@ -329,6 +357,7 @@ void handleHeuristicaConstrutiva(double alfa)
   // TODO: Validar inclusão aqui do código para pegar tempo do maior na solução
   inserirTarefaNaSolucao(11);
 
+#ifdef MODO_DEBUG
   printf("\n------------- Matriz Recurso Tempo -------------\n");
   for (int i = 0; i < qtdRecursos; i++)
   {
@@ -339,6 +368,7 @@ void handleHeuristicaConstrutiva(double alfa)
     }
     printf("\n");
   }
+#endif
 }
 
 void preencherMatrizRecursoTempo(int tarefa, int startTime)
@@ -535,17 +565,17 @@ bool todosPredecessoresJaEntraram(int idTarefa, int qtdTarefasAnalizar, int *vet
   return true;
 }
 
-void simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz)
+Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz)
 {
   double temp = temp_inicial;
   Solucao solucao_melhor = solucao_inicial;
   Solucao solucao_atual = solucao_inicial;
 
-  while (temp < temp_final)
+  while (temp <= temp_final)
   {
     for (int i = 0; i < num_sol_viz; i++)
     {
-      Solucao solucao_vizinha = gerar_vizinho(solucao_atual);
+      Solucao solucao_vizinha = gerar_vizinho_tempo(solucao_atual);
 
       int dif_fo = solucao_vizinha.funObj - solucao_atual.funObj;
 
@@ -563,23 +593,16 @@ void simulated_annealing(Solucao solucao_inicial, double temp_inicial, double te
           copiarSolucao(solucao_atual, solucao_vizinha);
         }
       }
-      printf("FO vizinho: %d", solucao_vizinha.funObj);
       if (solucao_vizinha.funObj < solucao_melhor.funObj)
       {
         copiarSolucao(solucao_melhor, solucao_vizinha);
-
-        printf("Melhorei");
       }
     }
 
     temp = temp * taxa_resf;
-
-    //if (temp < temp_final)
-    //{
-      //temp = temp_inicial;
-    //}
-    // printf("\nMelhor FO: %d", solucao_melhor.funObj);
   }
+
+  return solucao_melhor;
 }
 
 bool algum_predecessores_nao_entraram(const int tempo, tPrececessores predecessores, Solucao solucao)
@@ -640,7 +663,7 @@ Solucao gerar_vizinho(Solucao solucao_atual)
   while (!pode_entrar_alguem)
   {
     num_aleat_1 = rand() % (qtdTarefas - 1) + 1;
-    num_aleat_2 = (rand() % ((qtdTarefas-1) - num_aleat_1 + 1)) + num_aleat_1;
+    num_aleat_2 = (rand() % (11 - num_aleat_1 + 1)) + num_aleat_1;
 
     while (num_aleat_1 == num_aleat_2)
     {
@@ -736,6 +759,50 @@ void inserir_uso_recursos(Solucao &solucao_atual, int index_tarefa)
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga)
 {
   memcpy(&solucaoNova, &solucaoAntiga, sizeof(solucaoAntiga));
+}
+
+void escreverSolucao(Solucao &solucao, std::string arq)
+{
+  FILE *arquivo = fopen(arq.c_str(), "w");
+
+  fprintf(arquivo, "FO: ");
+  fprintf(arquivo, "%d\n", solucao.funObj);
+
+  fprintf(arquivo, "Makespan: ");
+  fprintf(arquivo, "%d\n", solucao.funObj);
+
+  fprintf(arquivo, "------------------\n");
+  fprintf(arquivo, "Job Start Time\n");
+
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    fprintf(arquivo, "%d %d\n",
+            solucao.matriz_solucao_com_tempos[0][i],
+            solucao.matriz_solucao_com_tempos[1][i]);
+  }
+  fclose(arquivo);
+}
+
+void escreverMetricas(Solucao &solucao, std::string arq, double tempo_gasto, char instancia[], int seed)
+{
+  FILE *arquivo = fopen(arq.c_str(), "a");
+
+  fprintf(arquivo, "Instancia: %s | FO: %d | Tempo gasto:  %.5fs | Seed: %d", instancia, solucao.funObj, tempo_gasto, seed);
+
+  fprintf(arquivo, "\nSolucao: \n");
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    fprintf(arquivo, "%d ", solucao.matriz_solucao_com_tempos[0][i]);
+  }
+  fprintf(arquivo, "\n");
+
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    fprintf(arquivo, "%d ", solucao.matriz_solucao_com_tempos[1][i]);
+  }
+
+  fprintf(arquivo, "\n\n");
+  fclose(arquivo);
 }
 
 // Leitura
