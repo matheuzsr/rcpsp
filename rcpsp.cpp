@@ -158,18 +158,31 @@ int main(int argc, char *argv[])
 {
   int seed = time(NULL); // time(NULL); 1684285591
   srand(seed);
-  lerDados("./instancias/j12060_10.sm");
-  char instancia[] = "j12060_10.sm";
-  // Trocar por std::string
+
+  const char *instancias[] = {
+      "j301_1",
+      "j301_2",
+      "j609_3",
+      "j609_8",
+      "j1206_4",
+      "j1207_2",
+  };
 
   double tempo_limite = 5 * 60;
   double tempo_melhor, tempo_total;
 
-  double alfa = 0.995;
-  heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total,instancia, seed);
+  double alfa = 0.5;
+
+  size_t arraySize = sizeof(instancias) / sizeof(instancias[0]);
+  for (size_t i = 0; i < arraySize; ++i)
+  {
+    std::string instancia = instancias[i];
+    lerDados("./instancias/" + instancia + ".sm");
+    heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total, instancia, seed);
+  }
 }
 
-void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, char instancia[], int seed)
+void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string instancia, int seed)
 {
   Solucao solucao_melhor_global;
   solucao_melhor_global.funObj = 99999;
@@ -178,7 +191,8 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
   tempo_total = tempo_melhor = 0;
   hI = clock();
 
-  while (tempo_total < tempo_limite)
+  time_t startTime = time(NULL);
+  while (time(NULL) - startTime < tempo_limite)
   {
     // TODO Trazer esse cara para junto do handleHeuristicaConstrutiva(alfa);
     handleOrdenarTarefasPorSucessor();
@@ -227,7 +241,7 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
       hF = clock();
       tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
       copiarSolucao(solucao_melhor_global, solucao_construtiva);
-      escreverMetricas(solucao_melhor_global, "./metricas/metrica.sol", tempo_melhor, instancia, seed);
+      escreverMetricas(solucao_melhor_global, "./metricas/" + instancia + ".metric", tempo_melhor, seed);
     }
   }
 }
@@ -783,11 +797,11 @@ void escreverSolucao(Solucao &solucao, std::string arq)
   fclose(arquivo);
 }
 
-void escreverMetricas(Solucao &solucao, std::string arq, double tempo_gasto, char instancia[], int seed)
+void escreverMetricas(Solucao &solucao, std::string arq, double tempo_gasto, int seed)
 {
   FILE *arquivo = fopen(arq.c_str(), "a");
 
-  fprintf(arquivo, "Instancia: %s | FO: %d | Tempo gasto:  %.5fs | Seed: %d", instancia, solucao.funObj, tempo_gasto, seed);
+  fprintf(arquivo, "FO: %d | Tempo gasto:  %.5fs | Seed: %d", solucao.funObj, tempo_gasto, seed);
 
   fprintf(arquivo, "\nSolucao: \n");
   for (int i = 0; i < qtdTarefas; i++)
