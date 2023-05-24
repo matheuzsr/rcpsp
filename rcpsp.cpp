@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
       "j1207_2",
   };
 
-  double tempo_limite = 5 * 60;
+  double tempo_limite = 10 * 60;
   double tempo_melhor, tempo_total;
 
   double alfa = 0.5;
