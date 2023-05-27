@@ -159,6 +159,8 @@ int main(int argc, char *argv[])
   int seed = time(NULL); // time(NULL); 1684285591
   srand(seed);
 
+  const double alfas[] = {0, 0.2, 0.5, 0.8, 1};
+
   const char *instancias[] = {
       "j301_1",
       "j301_2",
@@ -168,17 +170,25 @@ int main(int argc, char *argv[])
       "j1207_2",
   };
 
-  double tempo_limite = 10 * 60;
+  int qtdExecucoes = 5;
+  double tempo_limite = 5 * 60;
   double tempo_melhor, tempo_total;
 
-  double alfa = 0.5;
-
-  size_t arraySize = sizeof(instancias) / sizeof(instancias[0]);
-  for (size_t i = 0; i < arraySize; ++i)
+  for (int i = 0; i < qtdExecucoes; i++)
   {
-    std::string instancia = instancias[i];
-    lerDados("./instancias/" + instancia + ".sm");
-    heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total, instancia, seed);
+    size_t qtdAlfas = sizeof(alfas) / sizeof(alfas[0]);
+    for (int indexAlfa = 0; indexAlfa < qtdAlfas; indexAlfa++)
+    {
+      double alfa = alfas[indexAlfa];
+      printf("\nAlfa: %.2f\n", alfa);
+      size_t qtdInstancias = sizeof(instancias) / sizeof(instancias[0]);
+      for (int indexInstancia = 0; indexInstancia < qtdInstancias; indexInstancia++)
+      {
+        std::string instancia = instancias[indexInstancia];
+        lerDados("./instancias/" + instancia + ".sm");
+        heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total, instancia, seed);
+      }
+    }
   }
 }
 
@@ -241,7 +251,7 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
       hF = clock();
       tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
       copiarSolucao(solucao_melhor_global, solucao_construtiva);
-      escreverMetricas(solucao_melhor_global, "./metricas/" + instancia + ".metric", tempo_melhor, seed);
+      escreverMetricas(solucao_melhor_global, "./metricas/alfa_" + std::to_string(alfa) + "/" + instancia + ".metric", tempo_melhor, seed);
     }
   }
 }
@@ -331,12 +341,20 @@ void handleHeuristicaConstrutiva(double alfa)
 
     int qtdEscalonamentoLRC = ceil(qtdEscalonamento * alfa);
 
+    // TODO: Revisar aqui
+    if (alfa == 0)
+    {
+      qtdEscalonamentoLRC = 1;
+    }
+
     // Fazendo valer regra de PRECEDENCIA
     int tempoTarefaEscolhida = PESO_PENALIZACAO_PRECEDENCIA;
     int tarefaEscolhida = -1;
     while (tempoTarefaEscolhida >= PESO_PENALIZACAO_PRECEDENCIA)
     {
-      int idTarefaEscolhida = (rand() % qtdEscalonamentoLRC - 1) + 1;
+
+      int idTarefaEscolhida = ((rand() % qtdEscalonamentoLRC) - 1) + 1;
+
       tarefaEscolhida = matriz_tarefas_escalonamento[0][idTarefaEscolhida];
       tempoTarefaEscolhida = matriz_tarefas_escalonamento[1][idTarefaEscolhida];
     }
