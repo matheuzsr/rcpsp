@@ -156,9 +156,6 @@ void inserirTarefaNaSolucao(int idTarefa)
 
 int main(int argc, char *argv[])
 {
-  int seed = time(NULL); // time(NULL); 1684285591
-  srand(seed);
-
   const double alfas[] = {0, 0.2, 0.5, 0.8, 1};
 
   const char *instancias[] = {
@@ -176,6 +173,9 @@ int main(int argc, char *argv[])
 
   for (int i = 0; i < qtdExecucoes; i++)
   {
+    int seed = time(NULL); // time(NULL); 1684285591
+    srand(seed);
+
     size_t qtdAlfas = sizeof(alfas) / sizeof(alfas[0]);
     for (int indexAlfa = 0; indexAlfa < qtdAlfas; indexAlfa++)
     {
