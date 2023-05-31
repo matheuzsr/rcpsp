@@ -71,7 +71,7 @@ void preencherMatrizBinariaTarefaTempo(int tarefa, int startTime);
 void preencherMatrizRecursoTempo(int tarefa, int startTime);
 
 // Heuristica GRASP
-void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string instancia, int seed);
+void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string instancia, int seed, int exec);
 // Heuristica construtiva
 void handleHeuristicaConstrutiva(double alfa);
 

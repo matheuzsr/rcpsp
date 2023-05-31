@@ -186,13 +186,13 @@ int main(int argc, char *argv[])
       {
         std::string instancia = instancias[indexInstancia];
         lerDados("./instancias/" + instancia + ".sm");
-        heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total, instancia, seed);
+        heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total, instancia, seed, i);
       }
     }
   }
 }
 
-void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string instancia, int seed)
+void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string instancia, int seed, int exec)
 {
   Solucao solucao_melhor_global;
   solucao_melhor_global.funObj = 99999;
@@ -251,7 +251,7 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
       hF = clock();
       tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
       copiarSolucao(solucao_melhor_global, solucao_construtiva);
-      escreverMetricas(solucao_melhor_global, "./metricas/alfa_" + std::to_string(alfa) + "/" + instancia + ".metric", tempo_melhor, seed);
+      escreverMetricas(solucao_melhor_global, "./metricas/exec_" + std::to_string(exec + 1) + "/alfa_" + std::to_string(alfa) + "/" + instancia + ".metric", tempo_melhor, seed);
     }
   }
 }
