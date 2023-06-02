@@ -387,7 +387,7 @@ void handleHeuristicaConstrutiva(double alfa)
     qtdEscalonamento--;
   }
   // TODO: Validar inclusão aqui do código para pegar tempo do maior na solução
-  inserirTarefaNaSolucao(11);
+  inserirTarefaNaSolucao(qtdTarefas - 1);
 
 #ifdef MODO_DEBUG
   printf("\n------------- Matriz Recurso Tempo -------------\n");
@@ -607,7 +607,7 @@ Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double
   {
     for (int i = 0; i < num_sol_viz; i++)
     {
-      Solucao solucao_vizinha = gerar_vizinho_tempo(solucao_atual);
+      Solucao solucao_vizinha = gerar_vizinho(solucao_atual);
 
       int dif_fo = solucao_vizinha.funObj - solucao_atual.funObj;
 
@@ -695,7 +695,7 @@ Solucao gerar_vizinho(Solucao solucao_atual)
   while (!pode_entrar_alguem)
   {
     num_aleat_1 = rand() % (qtdTarefas - 1) + 1;
-    num_aleat_2 = (rand() % (11 - num_aleat_1 + 1)) + num_aleat_1;
+    num_aleat_2 = (rand() % ((qtdTarefas - 1) - num_aleat_1 + 1)) + num_aleat_1;
 
     while (num_aleat_1 == num_aleat_2)
     {
