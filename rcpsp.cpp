@@ -202,58 +202,58 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
   hI = clock();
 
   time_t startTime = time(NULL);
-  while (time(NULL) - startTime < tempo_limite)
+  // while (time(NULL) - startTime < tempo_limite)
+  // {
+  // TODO Trazer esse cara para junto do handleHeuristicaConstrutiva(alfa);
+  handleOrdenarTarefasPorSucessor();
+
+  zerar_vetor(matriz_solucao_com_tempos[0], qtdTarefas, -1);
+  zerar_vetor(matriz_solucao_com_tempos[1], qtdTarefas, -1);
+  zerar_vetor(matriz_solucao_com_tempos[2], qtdTarefas, -1);
+
+  zerar_vetor(matriz_tarefas_escalonamento[0], qtdTarefas, -1);
+  zerar_vetor(matriz_tarefas_escalonamento[1], qtdTarefas, 0);
+
+  for (int i = 0; i < qtdRecursos; i++)
   {
-    // TODO Trazer esse cara para junto do handleHeuristicaConstrutiva(alfa);
-    handleOrdenarTarefasPorSucessor();
-
-    zerar_vetor(matriz_solucao_com_tempos[0], qtdTarefas, -1);
-    zerar_vetor(matriz_solucao_com_tempos[1], qtdTarefas, -1);
-    zerar_vetor(matriz_solucao_com_tempos[2], qtdTarefas, -1);
-
-    zerar_vetor(matriz_tarefas_escalonamento[0], qtdTarefas, -1);
-    zerar_vetor(matriz_tarefas_escalonamento[1], qtdTarefas, 0);
-
-    for (int i = 0; i < qtdRecursos; i++)
-    {
-      zerar_vetor(matriz_solucao_recursos_consumidos_tempo[i], TEMPO_MAXIMO, 0);
-    }
-
-    for (int i = 0; i < qtdTarefas; i++)
-    {
-      zerar_vetor(matriz_solucao_com_tempos[i], TEMPO_MAXIMO, -1);
-    }
-
-    memcpy(&matriz_tarefas_escalonamento[0], &tarefaQtdSucessores[0], sizeof(tarefaQtdSucessores[0]));
-
-    handleHeuristicaConstrutiva(alfa);
-
-    Solucao solucao_construtiva;
-    memcpy(&solucao_construtiva.matriz_solucao_com_tempos[0], &matriz_solucao_com_tempos[0], sizeof(matriz_solucao_com_tempos[0]));
-    memcpy(&solucao_construtiva.matriz_solucao_com_tempos[1], &matriz_solucao_com_tempos[1], sizeof(matriz_solucao_com_tempos[1]));
-    memcpy(&solucao_construtiva.matriz_solucao_com_tempos[2], &matriz_solucao_com_tempos[2], sizeof(matriz_solucao_com_tempos[2]));
-
-    for (int j = 0; j < qtdRecursos; j++)
-    {
-      memcpy(&solucao_construtiva.matriz_solucao_recursos_consumidos_tempo[j], &matriz_solucao_recursos_consumidos_tempo[j], sizeof(matriz_solucao_recursos_consumidos_tempo[j]));
-    }
-    solucao_construtiva.funObj = calcularFO(solucao_construtiva);
-
-    // Busca local
-    double temp_inicial = 100;
-    double temp_final = 0.01;
-    double taxa_resf = 0.995;
-    int num_sol_viz = 100;
-    simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz);
-
-    if (solucao_construtiva.funObj < solucao_melhor_global.funObj)
-    {
-      hF = clock();
-      tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
-      copiarSolucao(solucao_melhor_global, solucao_construtiva);
-      escreverMetricas(solucao_melhor_global, "./metricas/exec_" + std::to_string(exec + 1) + "/alfa_" + std::to_string(alfa) + "/" + instancia + ".metric", tempo_melhor, seed);
-    }
+    zerar_vetor(matriz_solucao_recursos_consumidos_tempo[i], TEMPO_MAXIMO, 0);
   }
+
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    zerar_vetor(matriz_solucao_com_tempos[i], TEMPO_MAXIMO, -1);
+  }
+
+  memcpy(&matriz_tarefas_escalonamento[0], &tarefaQtdSucessores[0], sizeof(tarefaQtdSucessores[0]));
+
+  handleHeuristicaConstrutiva(alfa);
+
+  Solucao solucao_construtiva;
+  memcpy(&solucao_construtiva.matriz_solucao_com_tempos[0], &matriz_solucao_com_tempos[0], sizeof(matriz_solucao_com_tempos[0]));
+  memcpy(&solucao_construtiva.matriz_solucao_com_tempos[1], &matriz_solucao_com_tempos[1], sizeof(matriz_solucao_com_tempos[1]));
+  memcpy(&solucao_construtiva.matriz_solucao_com_tempos[2], &matriz_solucao_com_tempos[2], sizeof(matriz_solucao_com_tempos[2]));
+
+  for (int j = 0; j < qtdRecursos; j++)
+  {
+    memcpy(&solucao_construtiva.matriz_solucao_recursos_consumidos_tempo[j], &matriz_solucao_recursos_consumidos_tempo[j], sizeof(matriz_solucao_recursos_consumidos_tempo[j]));
+  }
+  solucao_construtiva.funObj = calcularFO(solucao_construtiva);
+
+  // Busca local
+  double temp_inicial = 100;
+  double temp_final = 0.01;
+  double taxa_resf = 0.995;
+  int num_sol_viz = 100;
+  // simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz);
+
+  if (solucao_construtiva.funObj < solucao_melhor_global.funObj)
+  {
+    hF = clock();
+    tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+    copiarSolucao(solucao_melhor_global, solucao_construtiva);
+    escreverMetricas(solucao_melhor_global, "./metricas/exec_" + std::to_string(exec + 1) + "/alfa_" + std::to_string(alfa) + "/" + instancia + ".metric", tempo_melhor, seed);
+  }
+  // }
 }
 
 void handleHeuristicaConstrutiva(double alfa)
