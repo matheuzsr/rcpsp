@@ -4,7 +4,7 @@
 #define MAX_QTD_RECURSO 10
 #define MAX_QTD_TAREFAS 200
 #define PESO_PENALIZACAO_PRECEDENCIA 100000
-#define PESO_PENALIZACAO_RECURSOS 100
+#define PESO_PENALIZACAO_RECURSOS 1000
 #define TEMPO_MAXIMO 10000
 
 #include <string>
@@ -86,6 +86,7 @@ int calcularFO(Solucao &s);
 int calcularFOPrecedencia(Solucao &s);
 int calcularFORecurso(Solucao &s);
 bool todosPredecessoresJaEntraram(int idTarefa, int qtdTarefasAnalizar, int *vetor);
+bool todosPredecessoresJaEntraramBaseadoTempo(int idTarefa, int indexTarefa, Solucao s);
 
 // Metodos utilitários
 bool verificarSeEstaContidoVetor(const int value, const int qtd, const int vetor[]);
@@ -95,7 +96,7 @@ tSucessores getSucessores(const int tarefa);
 void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
 void escreverSolucao(Solucao &solucao, std::string arq);
 
-//Metricas
+// Metricas
 void escreverMetricas(Solucao &solucao, std::string arq, double tempo_gasto, int seed);
 
 void push_array(int id, int array[], int qtd);

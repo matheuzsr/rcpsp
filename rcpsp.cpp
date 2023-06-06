@@ -11,7 +11,7 @@
 
 #include <string.h>
 
-#define MODO_DEBUG true
+// #define MODO_DEBUG true
 
 #define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
@@ -118,7 +118,7 @@ int getStarTimeShiftTimeSolucaoPorCausaRecurso(int idTarefa)
       if (startTime != i)
       {
 #ifdef MODO_DEBUG
-        printf("\nEra %d, agr é %d", startTime, i);
+        // printf("\nEra %d, agr é %d", startTime, i);
 #endif
       }
       return i;
@@ -134,10 +134,10 @@ void inserirTarefaNaSolucao(int idTarefa)
   push_array(startTime, matriz_solucao_com_tempos[1], qtdTarefas);
   push_array(startTime + duracao[idTarefa], matriz_solucao_com_tempos[2], qtdTarefas);
 
-  // printf("Task: %d | Start time: %d", idTarefa, startTime);
+  // //printf("Task: %d | Start time: %d", idTarefa, startTime);
 
 #ifdef MODO_DEBUG
-  printf("\n------------- Matriz de solução -------------\n");
+  // printf("\n------------- Matriz de solução -------------\n");
   for (int i = 0; i < 3; i++)
   {
     for (int j = 0; j < qtdTarefas; j++)
@@ -147,27 +147,28 @@ void inserirTarefaNaSolucao(int idTarefa)
       {
         value = value + 1;
       }
-      printf("%d ", value);
+      // printf("%d ", value);
     }
-    printf("\n");
+    // printf("\n");
   }
 #endif
 }
 
 int main(int argc, char *argv[])
 {
-  const double alfas[] = {0, 0.2, 0.5, 0.8, 1};
+  const double alfas[] = {0.95};
 
   const char *instancias[] = {
       "j301_1",
       "j301_2",
       "j609_3",
-      "j609_8",
+      "j301_2",
       "j1206_4",
       "j1207_2",
+      // "j10",
   };
 
-  int qtdExecucoes = 5;
+  int qtdExecucoes = 2;
   double tempo_limite = 5 * 60;
   double tempo_melhor, tempo_total;
 
@@ -180,7 +181,6 @@ int main(int argc, char *argv[])
     for (int indexAlfa = 0; indexAlfa < qtdAlfas; indexAlfa++)
     {
       double alfa = alfas[indexAlfa];
-      printf("\nAlfa: %.2f\n", alfa);
       size_t qtdInstancias = sizeof(instancias) / sizeof(instancias[0]);
       for (int indexInstancia = 0; indexInstancia < qtdInstancias; indexInstancia++)
       {
@@ -238,20 +238,50 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
       memcpy(&solucao_construtiva.matriz_solucao_recursos_consumidos_tempo[j], &matriz_solucao_recursos_consumidos_tempo[j], sizeof(matriz_solucao_recursos_consumidos_tempo[j]));
     }
     solucao_construtiva.funObj = calcularFO(solucao_construtiva);
+    Solucao solucao_atual;
+    copiarSolucao(solucao_atual, solucao_construtiva);
 
-    // Busca local
-    double temp_inicial = 100;
-    double temp_final = 0.01;
-    double taxa_resf = 0.995;
-    int num_sol_viz = 100;
-    simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz);
+    const double temp_inicials[] = {0.05}; // {0.05, 10, 50, 100, 200};
+    const double temp_final = 0.01; // 0.01;
+    const double taxa_resfs[] = {0.1}; // {0.1, 0.995, 0.999, 0.9};
+    const int num_sol_vizs[] = {10}; // {10, 100, 300, 500};
 
-    if (solucao_construtiva.funObj < solucao_melhor_global.funObj)
+    size_t qtdTemp_inicials = sizeof(temp_inicials) / sizeof(temp_inicials[0]);
+    size_t qtdTaxa_resfs = sizeof(taxa_resfs) / sizeof(taxa_resfs[0]);
+    size_t qtdNum_sol_vizs = sizeof(num_sol_vizs) / sizeof(num_sol_vizs[0]);
+    for (int indexTemp_inicials = 0; indexTemp_inicials < qtdTemp_inicials; indexTemp_inicials++)
     {
-      hF = clock();
-      tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
-      copiarSolucao(solucao_melhor_global, solucao_construtiva);
-      escreverMetricas(solucao_melhor_global, "./metricas/exec_" + std::to_string(exec + 1) + "/alfa_" + std::to_string(alfa) + "/" + instancia + ".metric", tempo_melhor, seed);
+      double temp_inicial = temp_inicials[indexTemp_inicials];
+
+      for (int indexTaxa_resf = 0; indexTaxa_resf < qtdTaxa_resfs; indexTaxa_resf++)
+      {
+        double taxa_resf = taxa_resfs[indexTaxa_resf];
+
+        for (int indexNum_sol_viz = 0; indexNum_sol_viz < qtdNum_sol_vizs; indexNum_sol_viz++)
+        {
+          int num_sol_viz = num_sol_vizs[indexNum_sol_viz];
+
+          // if (solucao_atual.funObj < solucao_melhor_global.funObj)
+          // {
+          //   hF = clock();
+          //   tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+          //   copiarSolucao(solucao_melhor_global, solucao_atual);
+          //   printf("\nGuardei a melhor no arquivo");
+          //   escreverMetricas(solucao_melhor_global, "./metricas/exec_" + std::to_string(exec + 1) + "/alfa_" + std::to_string(alfa) + "/" + instancia + "-" + std::to_string(temp_inicial) + "-" + std::to_string(taxa_resf) + "-" + std::to_string(num_sol_viz) + ".metric", tempo_melhor, seed);
+          // }
+
+          solucao_atual = simulated_annealing(solucao_atual, temp_inicial, temp_final, taxa_resf, num_sol_viz);
+
+          if (solucao_atual.funObj < solucao_melhor_global.funObj)
+          {
+            hF = clock();
+            tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+            copiarSolucao(solucao_melhor_global, solucao_atual);
+            printf("\nGuardei a melhor no arquivo");
+            escreverMetricas(solucao_melhor_global, "./metricas/exec_" + std::to_string(exec + 1) + "/alfa_" + std::to_string(alfa) + "/" + instancia + "-" + std::to_string(temp_inicial) + "-" + std::to_string(taxa_resf) + "-" + std::to_string(num_sol_viz) + ".metric", tempo_melhor, seed);
+          }
+        }
+      }
     }
   }
 }
@@ -359,7 +389,7 @@ void handleHeuristicaConstrutiva(double alfa)
       tempoTarefaEscolhida = matriz_tarefas_escalonamento[1][idTarefaEscolhida];
     }
 #ifdef MODO_DEBUG
-    printf("\n\nTarefa escolhida: %d", tarefaEscolhida + 1);
+    // printf("\n\nTarefa escolhida: %d", tarefaEscolhida + 1);
 #endif
     // Fazendo valer regra de RECURSO
     // não pode estrapolar recursoDisponivel
@@ -390,15 +420,15 @@ void handleHeuristicaConstrutiva(double alfa)
   inserirTarefaNaSolucao(qtdTarefas - 1);
 
 #ifdef MODO_DEBUG
-  printf("\n------------- Matriz Recurso Tempo -------------\n");
+  // printf("\n------------- Matriz Recurso Tempo -------------\n");
   for (int i = 0; i < qtdRecursos; i++)
   {
     for (int j = 0; j < 50; j++)
     {
       int value = matriz_solucao_recursos_consumidos_tempo[i][j];
-      printf("%d ", value);
+      // printf("%d ", value);
     }
-    printf("\n");
+    // printf("\n");
   }
 #endif
 }
@@ -461,10 +491,10 @@ void calcularDuracaoTarefasMaisTempoPredecessores()
     tPrececessores predecessores = getPredecessores(idAtual);
     int qtdPredecessores = predecessores.qtdPrecedessores;
 
-    printf("\nTarefa %d ->", idAtual + 1);
+    // printf("\nTarefa %d ->", idAtual + 1);
     memset(&entraramList, -1, sizeof(entraramList));
     maiorDuracaoTarefas[1][i] = calcularTempoTarefa(idAtual, predecessores.list, qtdPredecessores);
-    printf("\nTempo %d \n", maiorDuracaoTarefas[1][i]);
+    // printf("\nTempo %d \n", maiorDuracaoTarefas[1][i]);
   }
 }
 
@@ -481,7 +511,7 @@ int calcularTempoTarefa(int idTarefa, int predecessores[], int qtdPredecessores)
 
       if (!includes_array(predecessor, entraramList, qtdTarefas))
       {
-        printf(" %d(%d) |", predecessor + 1, duracao[predecessor]);
+        // printf(" %d(%d) |", predecessor + 1, duracao[predecessor]);
         push_array(predecessor, entraramList, qtdTarefas);
         tempoTotal += calcularTempoTarefa(predecessor, predecessoresDentro.list, qtdPredecessoresDentro);
       }
@@ -538,14 +568,14 @@ int calcularFO(Solucao &s)
   int precedencia = calcularFOPrecedencia(s);
 
   int penalizacao = (recurso * PESO_PENALIZACAO_RECURSOS) + (precedencia * PESO_PENALIZACAO_PRECEDENCIA);
-  // printf("\n Penalização : %d \n", penalizacao);
+  // //printf("\n Penalização : %d \n", penalizacao);
 
   return penalizacao + makespan;
 }
 
 int calcularFORecurso(Solucao &s)
 {
-  int makespan = s.matriz_solucao_com_tempos[3][qtdTarefas];
+  int makespan = s.matriz_solucao_com_tempos[2][qtdTarefas - 1];
 
   int penalizacaoRecurso = 0;
   for (int i = 0; i < makespan; i++)
@@ -570,13 +600,34 @@ int calcularFOPrecedencia(Solucao &s)
   {
     int idTarefa = s.matriz_solucao_com_tempos[0][i];
 
-    if (!todosPredecessoresJaEntraram(idTarefa, i, s.matriz_solucao_com_tempos[0]))
+    if (!todosPredecessoresJaEntraramBaseadoTempo(idTarefa, i, s))
     {
       penalizacaoPrecedencia++;
     }
   }
 
   return penalizacaoPrecedencia;
+}
+
+bool todosPredecessoresJaEntraramBaseadoTempo(int idTarefa, int indexTarefa, Solucao s)
+{
+  int starttime_tarefa = s.matriz_solucao_com_tempos[1][indexTarefa];
+  tPrececessores predecessores = getPredecessores(idTarefa);
+
+  for (int j = 0; j < predecessores.qtdPrecedessores; j++)
+  {
+    int predecessor = predecessores.list[j];
+    int index_predecessor = findIndexByValue(predecessor, qtdTarefas, s.matriz_solucao_com_tempos[0]);
+    int end_time_predecessor = s.matriz_solucao_com_tempos[2][index_predecessor];
+
+    // A segunda parte da condicional é para
+    if (starttime_tarefa < end_time_predecessor && predecessor != 0)
+    {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 bool todosPredecessoresJaEntraram(int idTarefa, int qtdTarefasAnalizar, int *vetor)
@@ -603,15 +654,19 @@ Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double
   Solucao solucao_melhor = solucao_inicial;
   Solucao solucao_atual = solucao_inicial;
 
-  while (temp <= temp_final)
+  while (temp_final <= temp)
+  // while (temp <= temp_final)
   {
     for (int i = 0; i < num_sol_viz; i++)
     {
-      Solucao solucao_vizinha = gerar_vizinho(solucao_atual);
-
+      Solucao solucao_vizinha = gerar_vizinho_tempo(solucao_atual);
       int dif_fo = solucao_vizinha.funObj - solucao_atual.funObj;
+      if (solucao_vizinha.funObj < 1000)
+      {
+        printf("SA: Viável");
+      }
 
-      if (dif_fo < 0)
+      if (dif_fo > 0)
       {
         copiarSolucao(solucao_atual, solucao_vizinha);
       }
@@ -625,8 +680,12 @@ Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double
           copiarSolucao(solucao_atual, solucao_vizinha);
         }
       }
+
       if (solucao_vizinha.funObj < solucao_melhor.funObj)
       {
+        printf("\nFO: %d\n", solucao_vizinha.funObj);
+        printf("Melhorei no simulated_annealing");
+
         copiarSolucao(solucao_melhor, solucao_vizinha);
       }
     }
@@ -663,27 +722,66 @@ bool algum_predecessores_nao_entraram(const int tempo, tPrececessores predecesso
 
 Solucao gerar_vizinho_tempo(Solucao solucao_atual)
 {
-  // int idTarefa = rand() % (qtdTarefas - 1) + 1;
-  int idTarefa = rand() % (qtdTarefas - qtdTarefas / 2 - 1) + qtdTarefas / 2 + 1;
-  int indexMatriz = findIndexByValue(idTarefa, qtdTarefas, solucao_atual.matriz_solucao_com_tempos[0]);
-  int start_time_tarefa = solucao_atual.matriz_solucao_com_tempos[0][indexMatriz];
+  Solucao vizinho;
+  copiarSolucao(vizinho, solucao_atual);
 
-  tPrececessores predecessores = getPredecessores(idTarefa);
-  int tempo = 0;
-  while (tempo < start_time_tarefa)
+  // Gerar um vizinho aleatório entre a metade e o fim da solucao
+  int index_tarefa = rand() % (qtdTarefas - 1) + 1;
+  int tarefa = vizinho.matriz_solucao_com_tempos[0][index_tarefa];
+
+  int maior_end_time = 0;
+  for (int i = 0; i < qtdTarefas; i++)
   {
-    if (!algum_predecessores_nao_entraram(tempo, predecessores, solucao_atual))
-    {
-      printf("posso entrar");
-    }
-
-    tempo++;
+    maior_end_time = MAX(vizinho.matriz_solucao_com_tempos[2][i], maior_end_time);
   }
+
+  int novo_starttime = rand() % maior_end_time;
+  int novo_endtime = novo_starttime + duracao[tarefa];
+
+  vizinho.matriz_solucao_com_tempos[1][index_tarefa] = novo_starttime;
+  vizinho.matriz_solucao_com_tempos[2][index_tarefa] = novo_endtime;
+
+  for (int recurso = 0; recurso <= qtdRecursos; recurso++)
+  {
+    zerar_vetor(vizinho.matriz_solucao_recursos_consumidos_tempo[recurso], maior_end_time, 0);
+  }
+
+  for (int i = 0; i < maior_end_time; i++)
+  {
+    for (int recurso = 0; recurso < qtdRecursos; recurso++)
+    {
+      for (int indexTarefa = 0; indexTarefa < qtdTarefas; indexTarefa++)
+      {
+        int tarefa = vizinho.matriz_solucao_com_tempos[0][indexTarefa];
+        int start_time = vizinho.matriz_solucao_com_tempos[1][indexTarefa];
+        int end_time = vizinho.matriz_solucao_com_tempos[2][indexTarefa];
+
+        if (i >= start_time && i <= end_time)
+        {
+          int custo_tempo_atual = vizinho.matriz_solucao_recursos_consumidos_tempo[recurso][i];
+          vizinho.matriz_solucao_recursos_consumidos_tempo[recurso][i] = custo_tempo_atual + consumoRecursos[tarefa][recurso];
+        }
+      }
+    }
+  }
+
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    maior_end_time = MAX(vizinho.matriz_solucao_com_tempos[2][i], maior_end_time);
+  }
+  vizinho.matriz_solucao_com_tempos[1][qtdTarefas - 1] = maior_end_time;
+  vizinho.matriz_solucao_com_tempos[2][qtdTarefas - 1] = maior_end_time;
+
+  // Recalcular o valor da função objetivo do vizinho
+  vizinho.funObj = calcularFO(vizinho);
+
+  // Retornar o vizinho gerado
+  return vizinho;
 }
 
 Solucao gerar_vizinho(Solucao solucao_atual)
 {
-  // printf("Gerando vizinho");
+  // //printf("Gerando vizinho");
 
   int aux[2];
 
@@ -691,27 +789,44 @@ Solucao gerar_vizinho(Solucao solucao_atual)
 
   int num_aleat_1;
   int num_aleat_2;
+  int idTarefa1;
+  int idTarefa2;
+
   int onde_pode_entrar[qtdTarefas];
+  int qtd_onde_pode_entrar = 0;
+
   while (!pode_entrar_alguem)
   {
     num_aleat_1 = rand() % (qtdTarefas - 1) + 1;
-    num_aleat_2 = (rand() % ((qtdTarefas - 1) - num_aleat_1 + 1)) + num_aleat_1;
+    num_aleat_2 = rand() % (qtdTarefas - 1) + 1;
 
+    // Validação para se for igual ou for a tarefa qtdTarefa-1
     while (num_aleat_1 == num_aleat_2)
     {
       num_aleat_2 = rand() % (qtdTarefas - 1) + 1;
     }
 
-    int idTarefa = solucao_atual.matriz_solucao_com_tempos[0][num_aleat_1];
+    if (num_aleat_1 > num_aleat_2)
+    {
+      int aux = num_aleat_1;
+      num_aleat_1 = num_aleat_2;
+      num_aleat_2 = aux;
+    }
 
-    tSucessores sucessores = getSucessores(idTarefa);
+    idTarefa1 = solucao_atual.matriz_solucao_com_tempos[0][num_aleat_1];
+    idTarefa2 = solucao_atual.matriz_solucao_com_tempos[0][num_aleat_2];
 
+    tPrececessores predecessores2 = getPredecessores(idTarefa2);
+
+    // Verificando se da lista de predecessores de 2, o id1 Pode entrar antes
     zerar_vetor(onde_pode_entrar, qtdTarefas, -1);
     for (int i = num_aleat_1 + 1; i < num_aleat_2; i++)
     {
-      if (!includes_array(solucao_atual.matriz_solucao_com_tempos[0][i], sucessores.list, sucessores.qtdSucessores))
+      int candidatoTrocar = solucao_atual.matriz_solucao_com_tempos[0][i];
+      if (!includes_array(candidatoTrocar, predecessores2.list, predecessores2.qtdPrecedessores))
       {
         push_array(i, onde_pode_entrar, qtdTarefas);
+        qtd_onde_pode_entrar++;
       }
       else
       {
@@ -719,40 +834,54 @@ Solucao gerar_vizinho(Solucao solucao_atual)
       }
     }
 
-    bool pode_entrar_alguem = false;
-    for (int i = 0; i < qtdTarefas; i++)
+    for (int i = 0; i < qtd_onde_pode_entrar; i++)
     {
       if (onde_pode_entrar[i] != -1)
       {
         pode_entrar_alguem = true;
+        break;
       }
     }
   }
 
-  int num_aleat_2_antes_sucessor = onde_pode_entrar[0];
+  int num_aleatorio_index_2;
+  // Verificando se da lista de predecessores de 2, há predecessores de 1
+  tPrececessores predecessores1 = getPredecessores(idTarefa1);
+  for (int i = 0; i < qtd_onde_pode_entrar; i++)
+  {
+    if (!includes_array(onde_pode_entrar[i], predecessores1.list, predecessores1.qtdPrecedessores))
+    {
+      num_aleatorio_index_2 = onde_pode_entrar[0];
+    }
+  }
 
-  aux[0] = solucao_atual.matriz_solucao_com_tempos[0][num_aleat_2_antes_sucessor];
-  aux[1] = solucao_atual.matriz_solucao_com_tempos[1][num_aleat_2_antes_sucessor];
+  aux[0] = solucao_atual.matriz_solucao_com_tempos[0][num_aleatorio_index_2];
+  aux[1] = solucao_atual.matriz_solucao_com_tempos[1][num_aleatorio_index_2];
 
-  remover_uso_recursos(solucao_atual, num_aleat_1);
-  remover_uso_recursos(solucao_atual, num_aleat_2_antes_sucessor);
+  // remover_uso_recursos(solucao_atual, num_aleat_1);
+  // remover_uso_recursos(solucao_atual, num_aleatorio_index_2);
 
-  solucao_atual.matriz_solucao_com_tempos[0][num_aleat_2_antes_sucessor] = solucao_atual.matriz_solucao_com_tempos[0][num_aleat_1];
-  solucao_atual.matriz_solucao_com_tempos[1][num_aleat_2_antes_sucessor] = solucao_atual.matriz_solucao_com_tempos[1][num_aleat_1];
-  solucao_atual.matriz_solucao_com_tempos[2][num_aleat_2_antes_sucessor] = solucao_atual.matriz_solucao_com_tempos[1][num_aleat_1] + duracao[solucao_atual.matriz_solucao_com_tempos[0][num_aleat_1]];
+  solucao_atual.matriz_solucao_com_tempos[0][num_aleatorio_index_2] = solucao_atual.matriz_solucao_com_tempos[0][num_aleat_1];
+  solucao_atual.matriz_solucao_com_tempos[1][num_aleatorio_index_2] = solucao_atual.matriz_solucao_com_tempos[1][num_aleat_1];
+  solucao_atual.matriz_solucao_com_tempos[2][num_aleatorio_index_2] = solucao_atual.matriz_solucao_com_tempos[1][num_aleat_1] + duracao[solucao_atual.matriz_solucao_com_tempos[0][num_aleat_1]];
 
   solucao_atual.matriz_solucao_com_tempos[0][num_aleat_1] = aux[0];
   solucao_atual.matriz_solucao_com_tempos[1][num_aleat_1] = aux[1];
   solucao_atual.matriz_solucao_com_tempos[2][num_aleat_1] = aux[1] + duracao[aux[0]];
 
-  inserir_uso_recursos(solucao_atual, num_aleat_1);
-  inserir_uso_recursos(solucao_atual, num_aleat_2_antes_sucessor);
+  // inserir_uso_recursos(solucao_atual, num_aleat_1);
+  // inserir_uso_recursos(solucao_atual, num_aleatorio_index_2);
 
   int maior_end_time = 0;
   for (int i = 0; i < qtdTarefas; i++)
   {
     maior_end_time = MAX(solucao_atual.matriz_solucao_com_tempos[2][i], maior_end_time);
   }
+
+  solucao_atual.matriz_solucao_com_tempos[1][qtdTarefas - 1] = maior_end_time;
+  solucao_atual.matriz_solucao_com_tempos[2][qtdTarefas - 1] = maior_end_time;
+
+  // Ajustar o tempo e se preocupando com o recurso
 
   solucao_atual.funObj = calcularFO(solucao_atual);
   return solucao_atual;
