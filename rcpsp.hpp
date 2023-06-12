@@ -3,7 +3,7 @@
 
 #define MAX_QTD_RECURSO 10
 #define MAX_QTD_TAREFAS 200
-#define PESO_PENALIZACAO_PRECEDENCIA 10000
+#define PESO_PENALIZACAO_PRECEDENCIA 100
 #define PESO_PENALIZACAO_RECURSOS 100
 #define TEMPO_MAXIMO 10000
 
@@ -71,13 +71,13 @@ void preencherMatrizBinariaTarefaTempo(int tarefa, int startTime);
 void preencherMatrizRecursoTempo(int tarefa, int startTime);
 
 // Heuristica GRASP
-void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string instancia, int seed, int exec);
+void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string instancia, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz, int seed, int exec);
 // Heuristica construtiva
 void handleHeuristicaConstrutiva(double alfa);
-
-Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz);
+Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz, double start_time, double tempo_limite);
 Solucao gerar_vizinho(Solucao solucao_atual);
 Solucao gerar_vizinho_tempo(Solucao solucao_atual);
+Solucao gerar_vizinho_tempo_rand(Solucao solucao_atual);
 void remover_uso_recursos(Solucao &solucao_atual, int index_tarefa);
 void inserir_uso_recursos(Solucao &solucao_atual, int index_tarefa);
 
@@ -89,6 +89,7 @@ bool todosPredecessoresJaEntraram(int idTarefa, int qtdTarefasAnalizar, int *vet
 bool todosPredecessoresJaEntraramBaseadoTempo(int idTarefa, int indexTarefa, Solucao s);
 
 // Metodos utilitários
+void arrumarSolucao(Solucao &solucao);
 bool verificarSeEstaContidoVetor(const int value, const int qtd, const int vetor[]);
 int findIndexByValue(const int value, const int qtd, const int vetor[]);
 tPrececessores getPredecessores(const int tarefa);
@@ -97,7 +98,7 @@ void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
 void escreverSolucao(Solucao &solucao, std::string arq);
 
 // Metricas
-void escreverMetricas(Solucao &solucao, std::string arq, double tempo_gasto, int seed);
+void escreverMetricas(Solucao &solucao, std::string arq, double tempo_gasto, int seed, bool SA);
 
 void push_array(int id, int array[], int qtd);
 bool includes_array(int id, int array[], int qtd);
