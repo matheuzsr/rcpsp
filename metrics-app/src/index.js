@@ -11,10 +11,10 @@ async function lerArquivoInstancia(caminhoArquivo) {
 
 const execs = ["exec_1", "exec_2", "exec_3", "exec_4", "exec_5"];
 const alfas = [
-  "alfa_0.000000",
-  "alfa_0.200000",
-  "alfa_0.500000",
   "alfa_0.800000",
+  "alfa_0.850000",
+  "alfa_0.900000",
+  "alfa_0.950000",
   "alfa_1.000000",
 ];
 const instancias = [
@@ -46,7 +46,7 @@ const main = async () => {
         const file = await lerArquivoInstancia(
           `../metricas/${execucao}/${alfa}/${instancia}.metric`
         );
-        console.log(execucao + ": " + getMelhorFO(file));
+        console.log(getMelhorFO(file));
       }
     }
   }
