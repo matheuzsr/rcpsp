@@ -9,22 +9,21 @@ async function lerArquivoInstancia(caminhoArquivo) {
   }
 }
 
-const execs = ["exec_1", "exec_2", "exec_3", "exec_4", "exec_5"];
-const alfas = [
-  "alfa_0.800000",
-  "alfa_0.850000",
-  "alfa_0.900000",
-  "alfa_0.950000",
-  "alfa_1.000000",
+const execucao = "exec_1";
+const alfa = "alfa_0.850000";
+const instancia = "j301_2";
+
+// j301_2-100.000000-0.999000-300
+const tempInicials = [
+  "1.000000",
+  "10.000000",
+  "50.000000",
+  "100.000000",
+  "200.000000",
 ];
-const instancias = [
-  "j301_1",
-  "j301_2",
-  "j609_3",
-  "j609_8",
-  "j1206_4",
-  "j1207_2",
-];
+const tempFinal = "0.010000";
+const taxaResfs = ["0.100000", "0.995000", "0.999000"];
+const numSolVizs = ["10", "100", "300", "500"];
 
 const getMelhorFO = (file) => {
   const regex = /FO:\s*(\d+)/g;
@@ -36,20 +35,87 @@ const getMelhorFO = (file) => {
   return melhoresFOs[0];
 };
 
-const main = async () => {
-  for (instancia of instancias) {
-    console.log("\nInstancia " + instancia + ":");
-    for (alfa of alfas) {
-      console.log("\nAlfa " + alfa + ":\n");
-      for (execucao of execs) {
-        console.log;
+const getMediasTemperaturasIniciais = async (instancia) => {
+  const mediasTemperaturas = [];
+
+  for (temperaturaInicial of tempInicials) {
+    let mediaTemperaturas = [];
+    for (taxaResfriamento of taxaResfs) {
+      for (numSolVizinho of numSolVizs) {
         const file = await lerArquivoInstancia(
-          `../metricas/${execucao}/${alfa}/${instancia}.metric`
+          `../metricas/${execucao}/${alfa}/${instancia}-${temperaturaInicial}-${taxaResfriamento}-${numSolVizinho}.metric`
         );
-        console.log(getMelhorFO(file));
+        mediaTemperaturas.push(Number(getMelhorFO(file)));
       }
     }
+
+    const media = calcularMedia(mediaTemperaturas);
+
+    mediasTemperaturas.push({
+      text: temperaturaInicial,
+      media,
+    });
   }
+
+  return mediasTemperaturas;
+};
+
+const getMediasTaxaResfriamento = async (instancia) => {
+  const mediasTaxaResfriamento = [];
+  const temperaturaInicial = "10.000000";
+
+  for (taxaResfriamento of taxaResfs) {
+    const valoresTaxaResfriamento = [];
+    for (numSolVizinho of numSolVizs) {
+      const file = await lerArquivoInstancia(
+        `../metricas/${execucao}/${alfa}/${instancia}-${temperaturaInicial}-${taxaResfriamento}-${numSolVizinho}.metric`
+      );
+      valoresTaxaResfriamento.push(Number(getMelhorFO(file)));
+    }
+
+    const media = calcularMedia(valoresTaxaResfriamento);
+
+    mediasTaxaResfriamento.push({
+      text: taxaResfriamento,
+      media,
+    });
+  }
+
+  return mediasTaxaResfriamento;
+};
+
+const getMediasNumSolVizs = async (instancia) => {
+  const mediasNumSolVizs = [];
+  const temperaturaInicial = "10.000000";
+  const taxaResfriamento = "0.100000";
+
+  for (numSolVizinho of numSolVizs) {
+    const file = await lerArquivoInstancia(
+      `../metricas/${execucao}/${alfa}/${instancia}-${temperaturaInicial}-${taxaResfriamento}-${numSolVizinho}.metric`
+    );
+
+    mediasNumSolVizs.push({
+      text: numSolVizinho,
+      value: Number(getMelhorFO(file)),
+    });
+  }
+
+  return mediasNumSolVizs;
+};
+
+const main = async () => {
+  console.log("MediasTemperaturasIniciais");
+  console.log(await getMediasTemperaturasIniciais(instancia));
+
+  console.log("MediasTaxaResfriamento");
+  console.log(await getMediasTaxaResfriamento(instancia));
+
+  console.log("ValorNumSolVizs");
+  console.log(await getMediasNumSolVizs(instancia));
+};
+
+export const calcularMedia = (vetor) => {
+  return vetor.reduce((acc, num) => acc + num, 0) / vetor.length;
 };
 
 main();
