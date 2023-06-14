@@ -699,7 +699,7 @@ Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double
   {
     for (int i = 0; i < num_sol_viz; i++)
     {
-      solucao_vizinha = gerar_vizinho_tempo(solucao_atual);
+      solucao_vizinha = gerar_vizinho_tempo_rand(solucao_atual);
       int dif_fo = solucao_vizinha.funObj - solucao_atual.funObj;
 
       if (time(NULL) > (start_time + tempo_limite))
