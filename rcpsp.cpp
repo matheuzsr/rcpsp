@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
   };
 
   int qtdExecucoes = 1;
-  double tempo_limite = 5 * 60;
+  double tempo_limite = 1;
   double tempo_melhor, tempo_total;
 
   for (int i = 0; i < qtdExecucoes; i++)
@@ -880,11 +880,10 @@ Solucao gerar_vizinho_tempo_rand(Solucao solucao_atual)
     vizinho.matriz_solucao_com_tempos[0][n2] = aux;
   }
 
+      // Arrumando solucao
+  arrumarSolucao(vizinho);
+
   vizinho.funObj = calcularFO(vizinho);
-  if (vizinho.funObj < 300)
-  {
-    printf("\n>>> FO vizinho: %d", vizinho.funObj);
-  }
 
   return vizinho;
 }

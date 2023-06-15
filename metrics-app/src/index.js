@@ -22,7 +22,7 @@ const tempInicials = [
   "200.000000",
 ];
 const tempFinal = "0.010000";
-const taxaResfs = ["0.100000", "0.995000", "0.999000"];
+const taxaResfs = ["0.100000", "0.995000", "0.999000", "0.900000"];
 const numSolVizs = ["10", "100", "300", "500"];
 
 const getMelhorFO = (file) => {
