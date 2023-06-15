@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
   };
 
   int qtdExecucoes = 1;
-  double tempo_limite = 1;
+  double tempo_limite = 5 * 60;
   double tempo_melhor, tempo_total;
 
   for (int i = 0; i < qtdExecucoes; i++)
