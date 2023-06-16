@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
 
   for (int i = 0; i < qtdExecucoes; i++)
   {
-    int seed = time(NULL); // time(NULL); 1684285591
+    int seed = 1684285591; // time(NULL); 1684285591
     srand(seed);
 
     size_t qtdAlfas = sizeof(alfas) / sizeof(alfas[0]);
