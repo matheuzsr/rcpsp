@@ -9,14 +9,19 @@ async function lerArquivoInstancia(caminhoArquivo) {
   }
 }
 
-const execs = ["exec_1", "exec_2", "exec_3", "exec_4", "exec_5"];
-const alfas = [
-  "alfa_0.800000",
-  "alfa_0.850000",
-  "alfa_0.900000",
-  "alfa_0.950000",
-  "alfa_1.000000",
+const execs = [
+  "exec_1",
+  "exec_2",
+  "exec_3",
+  "exec_4",
+  "exec_5",
+  "exec_6",
+  "exec_7",
+  "exec_8",
+  "exec_9",
+  "exec_5",
 ];
+
 const instancias = [
   "j301_1",
   "j301_2",
@@ -27,27 +32,18 @@ const instancias = [
 ];
 
 const getMelhorFO = (file) => {
-  const regex = /FO:\s*(\d+)/g;
+  const regex = /Melhor FO:\s*(\d+)/g;
 
-  const matches = file.match(regex);
-  const FOs = matches.map((match) => match.match(/\d+/)[0]);
-
-  melhoresFOs = FOs.sort();
-  return melhoresFOs[0];
+  return file.match(regex);
 };
 
 const main = async () => {
   for (instancia of instancias) {
     console.log("\nInstancia " + instancia + ":");
-    for (alfa of alfas) {
-      console.log("\nAlfa " + alfa + ":\n");
-      for (execucao of execs) {
-        console.log;
-        const file = await lerArquivoInstancia(
-          `../metricas/${execucao}/${alfa}/${instancia}.metric`
-        );
-        console.log(getMelhorFO(file));
-      }
+    for (execucao of execs) {
+      const file = await lerArquivoInstancia(`../metricas/${execucao}/${instancia}.sol`);
+
+      console.log(getMelhorFO(file));
     }
   }
 };
