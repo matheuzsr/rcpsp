@@ -71,7 +71,7 @@ void preencherMatrizBinariaTarefaTempo(int tarefa, int startTime);
 void preencherMatrizRecursoTempo(int tarefa, int startTime);
 
 // Heuristica GRASP
-void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string instancia, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz, int seed, int exec);
+void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string file_name);
 // Heuristica construtiva
 void handleHeuristicaConstrutiva(double alfa);
 Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz, double start_time, double tempo_limite);
@@ -98,7 +98,9 @@ void copiarSolucao(Solucao &solucaoNova, Solucao &solucaoAntiga);
 void escreverSolucao(Solucao &solucao, std::string arq);
 
 // Metricas
-void escreverMetricas(Solucao &solucao, std::string arq, double tempo_gasto, int seed, bool SA);
+void escreverMetricas(std::string arq, int fo_construtiva, int fo_SA, double tempo_gasto, bool is_melhorada_SA);
+void escreverSeedMetricas(std::string arq, int seed);
+void escreverFinalMetricas(Solucao solucao, std::string arq, double tempo_gasto);
 
 void push_array(int id, int array[], int qtd);
 bool includes_array(int id, int array[], int qtd);
