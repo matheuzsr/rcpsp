@@ -77,6 +77,7 @@ void handleHeuristicaConstrutiva(double alfa);
 Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz, double start_time, double tempo_limite);
 Solucao gerar_vizinho(Solucao solucao_atual);
 Solucao gerar_vizinho_tempo(Solucao solucao_atual);
+Solucao gerar_vizinho_tempo_novo(Solucao solucao_atual);
 Solucao gerar_vizinho_tempo_rand(Solucao solucao_atual);
 void remover_uso_recursos(Solucao &solucao_atual, int index_tarefa);
 void inserir_uso_recursos(Solucao &solucao_atual, int index_tarefa);

@@ -159,13 +159,30 @@ int main(int argc, char *argv[])
   const double alfas[] = {0.85};
 
   const char *instancias[] = {
-      "j301_1",
-      "j301_2",
-      "j609_3",
-      "j609_8",
-      "j1206_4",
-      "j1207_2",
-      // "j3048_10"
+      "j30/j301_1",
+      "j30/j301_2",
+      "j30/j301_3",
+      "j30/j301_4",
+      "j30/j301_5",
+
+      "j60/j601_1",
+      "j60/j601_2",
+      "j60/j601_3",
+      "j60/j601_4",
+      "j60/j601_5",
+
+      "j90/j901_1",
+      "j90/j901_2",
+      "j90/j901_3",
+      "j90/j901_4",
+      "j90/j901_5",
+
+      "j120/j1201_1",
+      "j120/j1201_2",
+      "j120/j1201_3",
+      "j120/j1201_4",
+      "j120/j1201_5",
+
       // "j10",
   };
 
@@ -263,15 +280,16 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
     int num_sol_viz = 1.2 * qtdTarefas;
     Solucao solucao_apos_SA = simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz, startTime, tempo_limite);
 
+    hF = clock();
+    double tempo_atual = ((double)(hF - hI)) / CLOCKS_PER_SEC;
     if (solucao_apos_SA.funObj < solucao_melhor_global.funObj)
     {
-      hF = clock();
-      tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
       copiarSolucao(solucao_melhor_global, solucao_apos_SA);
-
-      bool is_melhorada_SA = solucao_apos_SA.funObj < solucao_construtiva.funObj;
-      escreverMetricas(file_name, solucao_construtiva.funObj, solucao_apos_SA.funObj, tempo_melhor, is_melhorada_SA);
+      tempo_melhor = tempo_atual;
     }
+
+    bool is_melhorada_SA = solucao_apos_SA.funObj < solucao_construtiva.funObj;
+    escreverMetricas(file_name, solucao_construtiva.funObj, solucao_apos_SA.funObj, tempo_atual, is_melhorada_SA);
   }
 
   escreverFinalMetricas(solucao_melhor_global, file_name, tempo_melhor);
@@ -671,11 +689,11 @@ Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double
   copiarSolucao(solucao_melhor, solucao_inicial);
   copiarSolucao(solucao_atual, solucao_inicial);
 
-  while (temp_final <= temp)
+  while (temp >= temp_final)
   {
     for (int i = 0; i < num_sol_viz; i++)
     {
-      solucao_vizinha = gerar_vizinho_tempo_rand(solucao_atual);
+      solucao_vizinha = gerar_vizinho_tempo_novo(solucao_atual);
       int dif_fo = solucao_vizinha.funObj - solucao_atual.funObj;
 
       if (time(NULL) > (start_time + tempo_limite))
@@ -698,6 +716,7 @@ Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double
 
       if (solucao_vizinha.funObj < solucao_melhor.funObj)
       {
+        // Salvar aqui ja no arquivo se for melhor global
         copiarSolucao(solucao_melhor, solucao_vizinha);
         break;
       }
@@ -756,6 +775,93 @@ bool vizinho_pode_ser_gerado(Solucao vizinho, int index_tarefa, int tarefa, int 
   }
 
   return true;
+}
+
+Solucao gerar_vizinho_tempo_novo(Solucao solucao_atual)
+{
+  Solucao vizinho;
+  copiarSolucao(vizinho, solucao_atual);
+
+  // ordenar aqui por start_time
+  bool flag = true;
+  int indexAux;
+  int startAux;
+  int endAux;
+  while (flag)
+  {
+    flag = false;
+    for (int i = 0; i < qtdTarefas - 1; i++)
+    {
+      if (vizinho.matriz_solucao_com_tempos[1][i + 1] < vizinho.matriz_solucao_com_tempos[1][i])
+      {
+        flag = true;
+        indexAux = vizinho.matriz_solucao_com_tempos[0][i + 1];
+        startAux = vizinho.matriz_solucao_com_tempos[1][i + 1];
+        endAux = vizinho.matriz_solucao_com_tempos[2][i + 1];
+
+        vizinho.matriz_solucao_com_tempos[0][i + 1] = vizinho.matriz_solucao_com_tempos[0][i];
+        vizinho.matriz_solucao_com_tempos[1][i + 1] = vizinho.matriz_solucao_com_tempos[1][i];
+        vizinho.matriz_solucao_com_tempos[2][i + 1] = vizinho.matriz_solucao_com_tempos[2][i];
+
+        vizinho.matriz_solucao_com_tempos[0][i] = indexAux;
+        vizinho.matriz_solucao_com_tempos[1][i] = startAux;
+        vizinho.matriz_solucao_com_tempos[2][i] = endAux;
+      }
+    }
+  }
+
+  int num_aleat_1 = rand() % (qtdTarefas - 1) + 1;
+  int num_aleat_2 = rand() % (qtdTarefas - 1) + 1;
+
+  // Validação para se for igual ou for a tarefa qtdTarefa-1
+  while (num_aleat_1 == num_aleat_2)
+  {
+    num_aleat_2 = rand() % (qtdTarefas - 1) + 1;
+  }
+
+  if (num_aleat_1 > num_aleat_2)
+  {
+    int aux = num_aleat_1;
+    num_aleat_1 = num_aleat_2;
+    num_aleat_2 = aux;
+  }
+
+  int tarefa_1 = vizinho.matriz_solucao_com_tempos[0][num_aleat_1];
+  int tarefa_2 = vizinho.matriz_solucao_com_tempos[0][num_aleat_2];
+
+  Sucessores sucessores = getSucessores(tarefa_1);
+
+  int tarefas_para_trocar[qtdTarefas];
+  int qtd_tarefas_para_trocar = 0;
+  zerar_vetor(tarefas_para_trocar, qtdTarefas, -1);
+
+  for (int i = num_aleat_1 + 1; i <= num_aleat_2; i++)
+  {
+    int tarefa_para_trocar = vizinho.matriz_solucao_com_tempos[0][i];
+
+    if (!includes_array(tarefa_para_trocar, sucessores.list, sucessores.qtdSucessores))
+    {
+      push_array(i, tarefas_para_trocar, qtdTarefas);
+      qtd_tarefas_para_trocar++;
+    }
+  }
+
+  int index_tarefa_definida_trocar = tarefas_para_trocar[rand() % (qtd_tarefas_para_trocar + 1)];
+  int tarefa_definida_trocar = vizinho.matriz_solucao_com_tempos[0][index_tarefa_definida_trocar];
+
+  // Fazendo shift no array
+  for (int i = num_aleat_1; i < index_tarefa_definida_trocar; i++)
+  {
+    vizinho.matriz_solucao_com_tempos[0][i] = vizinho.matriz_solucao_com_tempos[0][i + 1];
+  }
+  vizinho.matriz_solucao_com_tempos[0][index_tarefa_definida_trocar] = tarefa_1;
+
+  // Arrumando solucao
+  arrumarSolucao(vizinho);
+
+  vizinho.funObj = calcularFO(vizinho);
+
+  return vizinho;
 }
 
 Solucao gerar_vizinho_tempo(Solucao solucao_atual)
@@ -825,6 +931,34 @@ Solucao gerar_vizinho_tempo(Solucao solucao_atual)
   vizinho.matriz_solucao_com_tempos[1][qtdTarefas - 1] = maior_end_time;
   vizinho.matriz_solucao_com_tempos[2][qtdTarefas - 1] = maior_end_time;
 
+  // ordenar aqui por start_time
+  bool flag = true;
+  int indexAux;
+  int startAux;
+  int endAux;
+  while (flag)
+  {
+    flag = false;
+    for (int i = 0; i < qtdTarefas - 1; i++)
+    {
+      if (vizinho.matriz_solucao_com_tempos[1][i + 1] < vizinho.matriz_solucao_com_tempos[1][i])
+      {
+        flag = true;
+        indexAux = vizinho.matriz_solucao_com_tempos[0][i + 1];
+        startAux = vizinho.matriz_solucao_com_tempos[1][i + 1];
+        endAux = vizinho.matriz_solucao_com_tempos[2][i + 1];
+
+        vizinho.matriz_solucao_com_tempos[0][i + 1] = vizinho.matriz_solucao_com_tempos[0][i];
+        vizinho.matriz_solucao_com_tempos[1][i + 1] = vizinho.matriz_solucao_com_tempos[1][i];
+        vizinho.matriz_solucao_com_tempos[2][i + 1] = vizinho.matriz_solucao_com_tempos[2][i];
+
+        vizinho.matriz_solucao_com_tempos[0][i] = indexAux;
+        vizinho.matriz_solucao_com_tempos[1][i] = startAux;
+        vizinho.matriz_solucao_com_tempos[2][i] = endAux;
+      }
+    }
+  }
+
   // Arrumando solucao
   arrumarSolucao(vizinho);
 
@@ -840,6 +974,34 @@ Solucao gerar_vizinho_tempo_rand(Solucao solucao_atual)
   int TROCAS = 3;
   Solucao vizinho;
   copiarSolucao(vizinho, solucao_atual);
+
+  // ordenar aqui por start_time
+  bool flag = true;
+  int indexAux;
+  int startAux;
+  int endAux;
+  while (flag)
+  {
+    flag = false;
+    for (int i = 0; i < qtdTarefas - 1; i++)
+    {
+      if (vizinho.matriz_solucao_com_tempos[1][i + 1] < vizinho.matriz_solucao_com_tempos[1][i])
+      {
+        flag = true;
+        indexAux = vizinho.matriz_solucao_com_tempos[0][i + 1];
+        startAux = vizinho.matriz_solucao_com_tempos[1][i + 1];
+        endAux = vizinho.matriz_solucao_com_tempos[2][i + 1];
+
+        vizinho.matriz_solucao_com_tempos[0][i + 1] = vizinho.matriz_solucao_com_tempos[0][i];
+        vizinho.matriz_solucao_com_tempos[1][i + 1] = vizinho.matriz_solucao_com_tempos[1][i];
+        vizinho.matriz_solucao_com_tempos[2][i + 1] = vizinho.matriz_solucao_com_tempos[2][i];
+
+        vizinho.matriz_solucao_com_tempos[0][i] = indexAux;
+        vizinho.matriz_solucao_com_tempos[1][i] = startAux;
+        vizinho.matriz_solucao_com_tempos[2][i] = endAux;
+      }
+    }
+  }
 
   int n1, n2;
   int qtd = rand() % TROCAS;
@@ -864,43 +1026,16 @@ Solucao gerar_vizinho_tempo_rand(Solucao solucao_atual)
 
 void arrumarSolucao(Solucao &solucao)
 {
-  // ordenar aqui por start_time
-  bool flag = true;
-  int indexAux;
-  int startAux;
-  int endAux;
-  while (flag)
-  {
-    flag = false;
-    for (int i = 0; i < qtdTarefas - 1; i++)
-    {
-      if (solucao.matriz_solucao_com_tempos[1][i + 1] < solucao.matriz_solucao_com_tempos[1][i])
-      {
-        flag = true;
-        indexAux = solucao.matriz_solucao_com_tempos[0][i + 1];
-        startAux = solucao.matriz_solucao_com_tempos[1][i + 1];
-        endAux = solucao.matriz_solucao_com_tempos[2][i + 1];
-
-        solucao.matriz_solucao_com_tempos[0][i + 1] = solucao.matriz_solucao_com_tempos[0][i];
-        solucao.matriz_solucao_com_tempos[1][i + 1] = solucao.matriz_solucao_com_tempos[1][i];
-        solucao.matriz_solucao_com_tempos[2][i + 1] = solucao.matriz_solucao_com_tempos[2][i];
-
-        solucao.matriz_solucao_com_tempos[0][i] = indexAux;
-        solucao.matriz_solucao_com_tempos[1][i] = startAux;
-        solucao.matriz_solucao_com_tempos[2][i] = endAux;
-      }
-    }
-  }
-
   int tempo = 0;
   bool geral_entrou = false, pode_entrar = false;
   int index_tarefa_para_entrar = 0;
 
+  int makespan = solucao.funObj;
   solucao.funObj = 0;
   zerar_vetor(solucao.matriz_solucao_com_tempos[1], qtdTarefas, -1);
   zerar_vetor(solucao.matriz_solucao_com_tempos[2], qtdTarefas, -1);
   for (int j = 0; j < qtdRecursos; j++)
-    zerar_vetor(solucao.matriz_solucao_recursos_consumidos_tempo[j], qtdTarefas, 0);
+    zerar_vetor(solucao.matriz_solucao_recursos_consumidos_tempo[j], makespan, 0);
 
   // if(tarefa == -1) {
   //   break;
@@ -1080,6 +1215,37 @@ Solucao gerar_vizinho(Solucao solucao_atual)
 
   // Ajustar o tempo e se preocupando com o recurso
 
+  // ordenar aqui por start_time
+  bool flag = true;
+  int indexAux;
+  int startAux;
+  int endAux;
+  while (flag)
+  {
+    flag = false;
+    for (int i = 0; i < qtdTarefas - 1; i++)
+    {
+      if (solucao_atual.matriz_solucao_com_tempos[1][i + 1] < solucao_atual.matriz_solucao_com_tempos[1][i])
+      {
+        flag = true;
+        indexAux = solucao_atual.matriz_solucao_com_tempos[0][i + 1];
+        startAux = solucao_atual.matriz_solucao_com_tempos[1][i + 1];
+        endAux = solucao_atual.matriz_solucao_com_tempos[2][i + 1];
+
+        solucao_atual.matriz_solucao_com_tempos[0][i + 1] = solucao_atual.matriz_solucao_com_tempos[0][i];
+        solucao_atual.matriz_solucao_com_tempos[1][i + 1] = solucao_atual.matriz_solucao_com_tempos[1][i];
+        solucao_atual.matriz_solucao_com_tempos[2][i + 1] = solucao_atual.matriz_solucao_com_tempos[2][i];
+
+        solucao_atual.matriz_solucao_com_tempos[0][i] = indexAux;
+        solucao_atual.matriz_solucao_com_tempos[1][i] = startAux;
+        solucao_atual.matriz_solucao_com_tempos[2][i] = endAux;
+      }
+    }
+  }
+
+  // Arrumando solucao
+  arrumarSolucao(solucao_atual);
+
   solucao_atual.funObj = calcularFO(solucao_atual);
   return solucao_atual;
 }
@@ -1175,6 +1341,18 @@ void escreverFinalMetricas(Solucao solucao, std::string arq, double tempo_gasto)
   for (int i = 0; i < qtdTarefas; i++)
   {
     fprintf(arquivo, "%d ", solucao.matriz_solucao_com_tempos[1][i]);
+  }
+
+  // Escrevendo no arquivo os recursos consumidos
+  fprintf(arquivo, "\n");
+  for (int i = 0; i < qtdRecursos; i++)
+  {
+    fprintf(arquivo, "\n");
+
+    for (int j = 0; j < solucao.funObj; j++)
+    {
+      fprintf(arquivo, "%d ", solucao.matriz_solucao_recursos_consumidos_tempo[i][j]);
+    }
   }
 
   fclose(arquivo);
