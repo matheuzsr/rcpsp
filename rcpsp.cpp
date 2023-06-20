@@ -160,7 +160,7 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
     double taxa_resf = 0.5; // 0.975
     int num_sol_viz = 1.2 * qtdTarefas;
 
-        Solucao solucao_apos_SA = simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz, startTime, tempo_limite);
+    Solucao solucao_apos_SA = simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz, startTime, tempo_limite);
 
     hF = clock();
     double tempo_atual = ((double)(hF - hI)) / CLOCKS_PER_SEC;
