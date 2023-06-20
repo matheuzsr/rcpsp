@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
       // "j10",
   };
 
-  const int x = 3 * 60;
+  const int x = 5 * 60;
   const int tempo_instancias[] = {
       // x,
       // x,
@@ -155,35 +155,30 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
     }
     solucao_construtiva.funObj = calcularFO(solucao_construtiva);
 
-    const double temp_inicials[] = {1, 10, 50, 100, 200};
     const double temp_final = 0.01;
     const double taxa_resfs[] = {0.1, 0.9, 0.975, 0.995, 0.999};
     int num_sol_viz = 1.2 * qtdTarefas;
 
-    size_t qtdTemp_inicials = sizeof(temp_inicials) / sizeof(temp_inicials[0]);
     size_t qtdTaxa_resfs = sizeof(taxa_resfs) / sizeof(taxa_resfs[0]);
 
-    for (int indexTemp_inicials = 0; indexTemp_inicials < qtdTemp_inicials; indexTemp_inicials++)
+    double temp_inicial = 1;
+
+    for (int indexTaxa_resf = 0; indexTaxa_resf < qtdTaxa_resfs; indexTaxa_resf++)
     {
-      double temp_inicial = temp_inicials[indexTemp_inicials];
+      double taxa_resf = taxa_resfs[indexTaxa_resf];
 
-      for (int indexTaxa_resf = 0; indexTaxa_resf < qtdTaxa_resfs; indexTaxa_resf++)
-      {
-        double taxa_resf = taxa_resfs[indexTaxa_resf];
+      Solucao solucao_apos_SA = simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz, startTime, tempo_limite);
 
-        Solucao solucao_apos_SA = simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz, startTime, tempo_limite);
-
-        hF = clock();
-        double tempo_atual = ((double)(hF - hI)) / CLOCKS_PER_SEC;
-        // if (solucao_apos_SA.funObj < solucao_melhor_global.funObj)
-        // {
-          copiarSolucao(solucao_melhor_global, solucao_apos_SA);
-          tempo_melhor = tempo_atual;
-          std::string file_name = "./metricas/exec_" + std::to_string(exec + 1) + "/j90" + "-" + std::to_string(temp_inicial) + "-" + std::to_string(taxa_resf) + ".metric";
-          bool is_melhorada_SA = solucao_apos_SA.funObj < solucao_construtiva.funObj;
-          escreverMetricas(solucao_apos_SA, file_name, tempo_atual, seed, is_melhorada_SA);
-        // }
-      }
+      hF = clock();
+      double tempo_atual = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+      // if (solucao_apos_SA.funObj < solucao_melhor_global.funObj)
+      // {
+      copiarSolucao(solucao_melhor_global, solucao_apos_SA);
+      tempo_melhor = tempo_atual;
+      std::string file_name = "./metricas/exec_" + std::to_string(exec + 1) + "/j90" + "-" + std::to_string(temp_inicial) + "-" + std::to_string(taxa_resf) + ".metric";
+      bool is_melhorada_SA = solucao_apos_SA.funObj < solucao_construtiva.funObj;
+      escreverMetricas(solucao_apos_SA, file_name, tempo_atual, seed, is_melhorada_SA);
+      // }
     }
   }
 
