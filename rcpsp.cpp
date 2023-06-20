@@ -106,8 +106,10 @@ int main(int argc, char *argv[])
 
 void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string file_name)
 {
-  printf("\n\n>>> (Heurística GRASP) Executando...");
 
+#ifdef MODO_DEBUG
+  printf("\n\n>>> (Heurística GRASP) Executando...");
+#endif
   Solucao solucao_melhor_global;
   solucao_melhor_global.funObj = 9999999;
 
@@ -157,7 +159,8 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
     const double temp_final = 0.01;
     double taxa_resf = 0.5; // 0.975
     int num_sol_viz = 1.2 * qtdTarefas;
-    Solucao solucao_apos_SA = simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz, startTime, tempo_limite);
+
+        Solucao solucao_apos_SA = simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz, startTime, tempo_limite);
 
     hF = clock();
     double tempo_atual = ((double)(hF - hI)) / CLOCKS_PER_SEC;
@@ -167,8 +170,8 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
       tempo_melhor = tempo_atual;
     }
 
-    bool is_melhorada_SA = solucao_apos_SA.funObj < solucao_construtiva.funObj;
-    escreverMetricas(file_name, solucao_construtiva.funObj, solucao_apos_SA.funObj, tempo_atual, is_melhorada_SA);
+    // bool is_melhorada_SA = solucao_apos_SA.funObj < solucao_construtiva.funObj;
+    // escreverMetricas(file_name, solucao_construtiva.funObj, solucao_apos_SA.funObj, tempo_atual, is_melhorada_SA);
   }
 
   escreverFinalMetricas(solucao_melhor_global, file_name, tempo_melhor);
@@ -176,7 +179,9 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
 
 void handleHeuristicaConstrutiva(double alfa)
 {
-  printf("\n>>> (Heurística Construtiva) Executando...");
+#ifdef MODO_DEBUG
+  // printf("\n>>> (Heurística Construtiva) Executando...");
+#endif
   int qtdEscalonamento = qtdTarefas;
 
   // Remove a ultima tarefa da solução
@@ -499,10 +504,8 @@ void calcularDuracaoTarefasMaisTempoPredecessores()
     tPrececessores predecessores = getPredecessores(idAtual);
     int qtdPredecessores = predecessores.qtdPrecedessores;
 
-    // printf("\nTarefa %d ->", idAtual + 1);
     memset(&entraramList, -1, sizeof(entraramList));
     maiorDuracaoTarefas[1][i] = calcularTempoTarefa(idAtual, predecessores.list, qtdPredecessores);
-    // printf("\nTempo %d \n", maiorDuracaoTarefas[1][i]);
   }
 }
 
@@ -678,7 +681,9 @@ bool todosPredecessoresJaEntraram(int idTarefa, int qtdTarefasAnalizar, int *vet
 
 Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz, double start_time, double tempo_limite)
 {
+#ifdef MODO_DEBUG
   printf("\n>>> (Simulated annealing) Executando...");
+#endif
   double temp = temp_inicial;
 
   Solucao solucao_vizinha;
