@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
       // 4 * x,
   };
 
-  int qtdExecucoes = 10;
+  int qtdExecucoes = 2;
   double tempo_limite;
   double tempo_melhor, tempo_total;
 
@@ -94,17 +94,17 @@ int main(int argc, char *argv[])
         std::string instancia = instancias[indexInstancia];
         lerDados("./instancias/" + instancia + ".sm");
 
-        std::string file_name = "./metricas/exec_" + std::to_string(i + 1) + "/" + instancia + ".sol";
-        escreverSeedMetricas(file_name, seed);
+        // std::string file_name = "./metricas/exec_" + std::to_string(i + 1) + "/" + instancia + ".sol";
+        // escreverSeedMetricas(file_name, seed);
 
         tempo_limite = tempo_instancias[indexInstancia];
-        heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total, file_name);
+        heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total, i, seed);
       }
     }
   }
 }
 
-void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string file_name)
+void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, int exec, int seed)
 {
 
 #ifdef MODO_DEBUG
@@ -155,26 +155,39 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
     }
     solucao_construtiva.funObj = calcularFO(solucao_construtiva);
 
-    double temp_inicial = 10;
+    const double temp_inicials[] = {1, 10, 50, 100, 200};
     const double temp_final = 0.01;
-    double taxa_resf = 0.5; // 0.975
+    const double taxa_resfs[] = {0.1, 0.9, 0.975, 0.995, 0.999};
     int num_sol_viz = 1.2 * qtdTarefas;
 
-    Solucao solucao_apos_SA = simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz, startTime, tempo_limite);
+    size_t qtdTemp_inicials = sizeof(temp_inicials) / sizeof(temp_inicials[0]);
+    size_t qtdTaxa_resfs = sizeof(taxa_resfs) / sizeof(taxa_resfs[0]);
 
-    hF = clock();
-    double tempo_atual = ((double)(hF - hI)) / CLOCKS_PER_SEC;
-    if (solucao_apos_SA.funObj < solucao_melhor_global.funObj)
+    for (int indexTemp_inicials = 0; indexTemp_inicials < qtdTemp_inicials; indexTemp_inicials++)
     {
-      copiarSolucao(solucao_melhor_global, solucao_apos_SA);
-      tempo_melhor = tempo_atual;
-    }
+      double temp_inicial = temp_inicials[indexTemp_inicials];
 
-    // bool is_melhorada_SA = solucao_apos_SA.funObj < solucao_construtiva.funObj;
-    // escreverMetricas(file_name, solucao_construtiva.funObj, solucao_apos_SA.funObj, tempo_atual, is_melhorada_SA);
+      for (int indexTaxa_resf = 0; indexTaxa_resf < qtdTaxa_resfs; indexTaxa_resf++)
+      {
+        double taxa_resf = taxa_resfs[indexTaxa_resf];
+
+        Solucao solucao_apos_SA = simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz, startTime, tempo_limite);
+
+        hF = clock();
+        double tempo_atual = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+        // if (solucao_apos_SA.funObj < solucao_melhor_global.funObj)
+        // {
+          copiarSolucao(solucao_melhor_global, solucao_apos_SA);
+          tempo_melhor = tempo_atual;
+          std::string file_name = "./metricas/exec_" + std::to_string(exec + 1) + "/j90" + "-" + std::to_string(temp_inicial) + "-" + std::to_string(taxa_resf) + ".metric";
+          bool is_melhorada_SA = solucao_apos_SA.funObj < solucao_construtiva.funObj;
+          escreverMetricas(solucao_apos_SA, file_name, tempo_atual, seed, is_melhorada_SA);
+        // }
+      }
+    }
   }
 
-  escreverFinalMetricas(solucao_melhor_global, file_name, tempo_melhor);
+  // escreverFinalMetricas(solucao_melhor_global, file_name, tempo_melhor);
 }
 
 void handleHeuristicaConstrutiva(double alfa)
@@ -1318,13 +1331,26 @@ void escreverSeedMetricas(std::string arq, int seed)
   fclose(arquivo);
 }
 
-void escreverMetricas(std::string arq, int fo_construtiva, int fo_SA, double tempo_gasto, bool is_melhorada_SA)
+void escreverMetricas(Solucao &solucao, std::string arq, double tempo_gasto, int seed, bool SA)
 {
   FILE *arquivo = fopen(arq.c_str(), "a");
-  std::string boolean_SA = is_melhorada_SA ? "true" : "false";
+  std::string boolean_SA = SA ? "true" : "false";
 
-  fprintf(arquivo, "FO-const: %d | FO-SA: %d | Tempo: %.6fs | SA: %s\n", fo_construtiva, fo_SA, tempo_gasto, boolean_SA.c_str());
+  fprintf(arquivo, "FO: %d | Tempo gasto:  %.5fs | Seed: %d | SA: %s", solucao.funObj, tempo_gasto, seed, boolean_SA.c_str());
 
+  fprintf(arquivo, "\nSolucao: \n");
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    fprintf(arquivo, "%d ", solucao.matriz_solucao_com_tempos[0][i]);
+  }
+  fprintf(arquivo, "\n");
+
+  for (int i = 0; i < qtdTarefas; i++)
+  {
+    fprintf(arquivo, "%d ", solucao.matriz_solucao_com_tempos[1][i]);
+  }
+
+  fprintf(arquivo, "\n\n");
   fclose(arquivo);
 }
 
