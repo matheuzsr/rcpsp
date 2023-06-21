@@ -75,20 +75,17 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
 
 // Heuristica construtiva
 void handleHeuristicaConstrutiva(double alfa);
-Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz, double start_time, double tempo_limite);
-Solucao gerar_vizinho(Solucao solucao_atual);
-Solucao gerar_vizinho_tempo(Solucao solucao_atual);
-Solucao gerar_vizinho_tempo_novo(Solucao solucao_atual);
-Solucao gerar_vizinho_tempo_rand(Solucao solucao_atual);
-void remover_uso_recursos(Solucao &solucao_atual, int index_tarefa);
-void inserir_uso_recursos(Solucao &solucao_atual, int index_tarefa);
-bool algumPredecessoresJaEntrou(int idTarefa);
 bool algumPredecessoresJaEntrou(int idTarefa);
 int getMaiorEndTimeMatrizSolucao();
 int getStartTimeTarefa(int idTarefa);
 bool atendeProximas(int idTarefa, const int inicio, int fim);
 int getStarTimeShiftTimeSolucaoPorCausaRecurso(int idTarefa);
 void inserirTarefaNaSolucao(int idTarefa);
+
+// Busca local
+Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz, double start_time, double tempo_limite);
+Solucao gerar_vizinho_tempo_novo(Solucao solucao_atual);
+void arrumarSolucao(Solucao &solucao);
 
 // FO
 int calcularFO(Solucao &s);
@@ -98,8 +95,6 @@ bool todosPredecessoresJaEntraram(int idTarefa, int qtdTarefasAnalizar, int *vet
 bool todosPredecessoresJaEntraramBaseadoTempo(int idTarefa, int indexTarefa, Solucao s);
 
 // Metodos utilitários
-void arrumarSolucao(Solucao &solucao);
-bool verificarSeEstaContidoVetor(const int value, const int qtd, const int vetor[]);
 int findIndexByValue(const int value, const int qtd, const int vetor[]);
 tPrececessores getPredecessores(const int tarefa);
 tSucessores getSucessores(const int tarefa);
@@ -114,6 +109,5 @@ void escreverFinalMetricas(Solucao solucao, std::string arq, double tempo_gasto)
 void push_array(int id, int array[], int qtd);
 bool includes_array(int id, int array[], int qtd);
 void zerar_vetor(int *array, const int tamanho, const int value);
-void remover_elemento_matriz(int elemento, int *matriz, int linhas, int colunas);
 
 #endif // PMM_HPP_INCLUDED
