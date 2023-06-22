@@ -1,6 +1,6 @@
 import { readFile } from "fs/promises";
 
-async function lerArquivoInstancia(caminhoArquivo) {
+async function lerArquivoMetricas(caminhoArquivo) {
   try {
     const conteudo = await readFile(caminhoArquivo, "utf8");
     return conteudo;
@@ -9,46 +9,55 @@ async function lerArquivoInstancia(caminhoArquivo) {
   }
 }
 
-const execs = ["exec_1", "exec_2", "exec_3", "exec_4", "exec_5"];
-const alfas = [
-  "alfa_0.800000",
-  "alfa_0.850000",
-  "alfa_0.900000",
-  "alfa_0.950000",
-  "alfa_1.000000",
-];
+const execs = ["exec_1"];
+
 const instancias = [
-  "j301_1",
-  "j301_2",
-  "j609_3",
-  "j609_8",
-  "j1206_4",
-  "j1207_2",
+  "j30/j301_1",
+  "j30/j301_2",
+  "j30/j301_3",
+  "j30/j301_4",
+  "j30/j301_5",
+
+  "j60/j601_1",
+  "j60/j601_2",
+  "j60/j601_3",
+  "j60/j601_4",
+  "j60/j601_5",
+
+  "j90/j901_1",
+  "j90/j901_2",
+  "j90/j901_3",
+  "j90/j901_4",
+  "j90/j901_5",
+
+  "j120/j1201_1",
+  "j120/j1201_2",
+  "j120/j1201_3",
+  "j120/j1201_4",
+  "j120/j1201_5",
 ];
 
 const getMelhorFO = (file) => {
   const regex = /FO:\s*(\d+)/g;
 
-  const matches = file.match(regex);
-  const FOs = matches.map((match) => match.match(/\d+/)[0]);
-
-  melhoresFOs = FOs.sort();
-  return melhoresFOs[0];
+  return file.match(regex)[0].match(/\d+/)[0];
 };
 
 const main = async () => {
+  let i = 0;
   for (instancia of instancias) {
-    console.log("\nInstancia " + instancia + ":");
-    for (alfa of alfas) {
-      console.log("\nAlfa " + alfa + ":\n");
-      for (execucao of execs) {
-        console.log;
-        const file = await lerArquivoInstancia(
-          `../metricas/${execucao}/${alfa}/${instancia}.metric`
-        );
-        console.log(getMelhorFO(file));
-      }
+    if((i % 5) === 0) {
+      console.log(instancia + ":");
     }
+
+    for (execucao of execs) {
+      const file = await lerArquivoMetricas(
+        `../metricas/${execucao}/${instancia}.sol`
+      );
+      console.log(getMelhorFO(file));
+    }
+
+    i++;
   }
 };
 
