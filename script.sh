@@ -6,7 +6,7 @@ make clean && make
 start_time=$(date +%s)
 echo "Hora de início: $(date +%H:%M:%S)"
 
-./rcpsp
+./rcpsp $1
 
 # Hora de fim
 end_time=$(date +%s)
