@@ -16,8 +16,10 @@
 #define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
 
-int main(char *argv[])
+int main(int argc, char *argv[])
 {
+  int exec = atoi(argv[1]);
+  printf("Exec %d", exec);
   double alfa = 0.85;
 
   const char *instancias[] = {
@@ -79,8 +81,8 @@ int main(char *argv[])
   int tempo_limite;
   double tempo_melhor, tempo_total;
 
-  for (int i = 1; i < qtdExecucoes; i++)
-  {
+  // for (int i = 1; i < qtdExecucoes; i++)
+  // {
     int seed = time(NULL); // time(NULL); 1684285591
     srand(seed);
 
@@ -96,7 +98,7 @@ int main(char *argv[])
 
       lerDados("./instancias/" + instancia + ".sm");
 
-      std::string file_name = "./metricas/exec_" + std::to_string(i + 1) + "/" + instancia + ".sol";
+      std::string file_name = "./metricas/exec_" + std::to_string(exec + 1) + "/" + instancia + ".sol";
       escreverSeedMetricas(file_name, seed);
 
       Solucao solucao_melhor_global;
@@ -106,7 +108,7 @@ int main(char *argv[])
 
       escreverFinalMetricas(solucao_melhor_global, file_name, tempo_melhor);
     }
-  }
+  // }
 }
 
 void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, Solucao &solucao_melhor_global, std::string file_name)
