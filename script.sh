@@ -3,11 +3,15 @@
 make clean && make
 
 # Hora de início
-start_time=$(date +%H:%M:%S)
-echo "Hora de início: $start_time"
+start_time=$(date +%s)
+echo "Hora de início: $(date +%H:%M:%S)"
 
 ./rcpsp
 
 # Hora de fim
-end_time=$(date +%H:%M:%S)
-echo "Hora de fim: $end_time"
+end_time=$(date +%s)
+echo "Hora de fim: $(date +%H:%M:%S)"
+
+# Cálculo do tempo gasto
+duration=$((end_time - start_time))
+echo "Tempo gasto: $duration s"

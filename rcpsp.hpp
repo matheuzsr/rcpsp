@@ -71,8 +71,7 @@ void preencherMatrizBinariaTarefaTempo(int tarefa, int startTime);
 void preencherMatrizRecursoTempo(int tarefa, int startTime);
 
 // Heuristica GRASP
-void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string file_name);
-
+void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, Solucao &solucao_melhor_global, std::string file_name);
 // Heuristica construtiva
 void handleHeuristicaConstrutiva(double alfa);
 bool algumPredecessoresJaEntrou(int idTarefa);
@@ -83,7 +82,7 @@ int getStarTimeShiftTimeSolucaoPorCausaRecurso(int idTarefa);
 void inserirTarefaNaSolucao(int idTarefa);
 
 // Busca local
-Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz, double start_time, double tempo_limite);
+Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz, double start_time, double tempo_limite, int fo_melhor_global, double &tempo_melhor, clock_t hI);
 Solucao gerar_vizinho_tempo_novo(Solucao solucao_atual);
 void arrumarSolucao(Solucao &solucao);
 

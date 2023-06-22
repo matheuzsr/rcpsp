@@ -75,37 +75,45 @@ int main(char *argv[])
       4 * x,
   };
 
-  int qtdExecucoes = 10;
-  double tempo_limite;
+  int qtdExecucoes = 2;
+  int tempo_limite;
   double tempo_melhor, tempo_total;
 
-  for (int i = 0; i < qtdExecucoes; i++)
+  for (int i = 1; i < qtdExecucoes; i++)
   {
     int seed = time(NULL); // time(NULL); 1684285591
     srand(seed);
 
     size_t qtdInstancias = sizeof(instancias) / sizeof(instancias[0]);
+
     for (int indexInstancia = 0; indexInstancia < qtdInstancias; indexInstancia++)
     {
+      printf("\nInst: %d/%d", indexInstancia + 1, qtdInstancias);
+      std::cout.flush();
+
       std::string instancia = instancias[indexInstancia];
+      tempo_limite = tempo_instancias[indexInstancia];
+
       lerDados("./instancias/" + instancia + ".sm");
 
       std::string file_name = "./metricas/exec_" + std::to_string(i + 1) + "/" + instancia + ".sol";
       escreverSeedMetricas(file_name, seed);
 
-      tempo_limite = tempo_instancias[indexInstancia];
-      heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total, file_name);
+      Solucao solucao_melhor_global;
+      solucao_melhor_global.funObj = 9999999;
+
+      heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total, solucao_melhor_global, file_name);
+
+      escreverFinalMetricas(solucao_melhor_global, file_name, tempo_melhor);
     }
   }
 }
 
-void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, std::string file_name)
+void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melhor, double &tempo_total, Solucao &solucao_melhor_global, std::string file_name)
 {
 #ifdef MODO_DEBUG
   printf("\n\n>>> (Heurística GRASP) Executando...");
 #endif
-  Solucao solucao_melhor_global;
-  solucao_melhor_global.funObj = 9999999;
 
   clock_t hI, hF;
   tempo_total = tempo_melhor = 0;
@@ -147,28 +155,29 @@ void heuristicaGrasp(double alfa, const double tempo_limite, double &tempo_melho
     {
       memcpy(&solucao_construtiva.matriz_solucao_recursos_consumidos_tempo[j], &matriz_solucao_recursos_consumidos_tempo[j], sizeof(matriz_solucao_recursos_consumidos_tempo[j]));
     }
+
     solucao_construtiva.funObj = calcularFO(solucao_construtiva);
 
-    double temp_inicial = 1;
-    const double temp_final = 0.01;
-    double taxa_resf = 0.995000;
-    int num_sol_viz = 1.2 * qtdTarefas;
-
-    Solucao solucao_apos_SA = simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz, startTime, tempo_limite);
-
-    hF = clock();
-    double tempo_atual = ((double)(hF - hI)) / CLOCKS_PER_SEC;
-    if (solucao_apos_SA.funObj < solucao_melhor_global.funObj)
+    double tempo_atual;
+    if (solucao_construtiva.funObj < solucao_melhor_global.funObj)
     {
-      copiarSolucao(solucao_melhor_global, solucao_apos_SA);
+      hF = clock();
+      double tempo_atual = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+      copiarSolucao(solucao_melhor_global, solucao_construtiva);
       tempo_melhor = tempo_atual;
     }
 
-    // bool is_melhorada_SA = solucao_apos_SA.funObj < solucao_construtiva.funObj;
-    // escreverMetricas(file_name, solucao_construtiva.funObj, solucao_apos_SA.funObj, tempo_atual, is_melhorada_SA);
-  }
+    double temp_inicial = 0.01 * qtdTarefas;
+    const double temp_final = 0.01;
+    double taxa_resf = 0.995000;
+    int num_sol_viz = 1.2 * qtdTarefas;
+    Solucao solucao_apos_SA = simulated_annealing(solucao_construtiva, temp_inicial, temp_final, taxa_resf, num_sol_viz, startTime, tempo_limite, solucao_melhor_global.funObj, tempo_melhor, hI);
 
-  escreverFinalMetricas(solucao_melhor_global, file_name, tempo_melhor);
+    if (solucao_apos_SA.funObj < solucao_melhor_global.funObj)
+    {
+      copiarSolucao(solucao_melhor_global, solucao_apos_SA);
+    }
+  }
 }
 
 void handleHeuristicaConstrutiva(double alfa)
@@ -678,7 +687,7 @@ bool todosPredecessoresJaEntraram(int idTarefa, int qtdTarefasAnalizar, int *vet
   return true;
 }
 
-Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz, double start_time, double tempo_limite)
+Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double temp_final, double taxa_resf, int num_sol_viz, double start_time, double tempo_limite, int fo_melhor_global, double &tempo_melhor, clock_t hI)
 {
 #ifdef MODO_DEBUG
   printf("\n>>> (Simulated annealing) Executando...");
@@ -718,6 +727,12 @@ Solucao simulated_annealing(Solucao solucao_inicial, double temp_inicial, double
 
       if (solucao_vizinha.funObj < solucao_melhor.funObj)
       {
+        if (solucao_vizinha.funObj < fo_melhor_global)
+        {
+          clock_t hF = clock();
+          tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+        }
+
         // Salvar aqui ja no arquivo se for melhor global
         copiarSolucao(solucao_melhor, solucao_vizinha);
         break;
