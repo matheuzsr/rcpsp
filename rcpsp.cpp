@@ -25,27 +25,31 @@ int main(int argc, char *argv[])
   const char *instancias[] = {
       "j30/j301_1",
       "j30/j301_2",
-      "j30/j301_3",
-      "j30/j301_4",
-      "j30/j301_5",
+      "j30/j3024_9",
+      "j30/j3024_10",
+      "j30/j3048_9",
+      "j30/j3048_10",
 
       "j60/j601_1",
       "j60/j601_2",
-      "j60/j601_3",
-      "j60/j601_4",
-      "j60/j601_5",
+      "j60/j6024_9",
+      "j60/j6024_10",
+      "j60/j6048_9",
+      "j60/j6048_10",
 
       "j90/j901_1",
       "j90/j901_2",
-      "j90/j901_3",
-      "j90/j901_4",
-      "j90/j901_5",
+      "j90/j9024_9",
+      "j90/j9024_10",
+      "j90/j9048_10",
+      "j90/j9048_9",
 
-      "j120/j1201_1",
-      "j120/j1201_2",
-      "j120/j1201_3",
-      "j120/j1201_4",
-      "j120/j1201_5",
+      "j120/j120_1",
+      "j120/j120_2",
+      "j120/j12030_9",
+      "j120/j12030_10",
+      "j120/j12060_9",
+      "j120/j12060_10",
 
       // "j10",
   };
@@ -83,31 +87,31 @@ int main(int argc, char *argv[])
 
   // for (int i = 1; i < qtdExecucoes; i++)
   // {
-    int seed = time(NULL); // time(NULL); 1684285591
-    srand(seed);
+  int seed = time(NULL); // time(NULL); 1684285591
+  srand(seed);
 
-    size_t qtdInstancias = sizeof(instancias) / sizeof(instancias[0]);
+  size_t qtdInstancias = sizeof(instancias) / sizeof(instancias[0]);
 
-    for (int indexInstancia = 0; indexInstancia < qtdInstancias; indexInstancia++)
-    {
-      printf("\nInst: %d/%d", indexInstancia + 1, qtdInstancias);
-      std::cout.flush();
+  for (int indexInstancia = 0; indexInstancia < qtdInstancias; indexInstancia++)
+  {
+    printf("\nInst: %d/%d", indexInstancia + 1, qtdInstancias);
+    std::cout.flush();
 
-      std::string instancia = instancias[indexInstancia];
-      tempo_limite = tempo_instancias[indexInstancia];
+    std::string instancia = instancias[indexInstancia];
+    tempo_limite = tempo_instancias[indexInstancia];
 
-      lerDados("./instancias/" + instancia + ".sm");
+    lerDados("./instancias/" + instancia + ".sm");
 
-      std::string file_name = "./metricas/exec_" + std::to_string(exec + 1) + "/" + instancia + ".sol";
-      escreverSeedMetricas(file_name, seed);
+    std::string file_name = "./metricas/exec_" + std::to_string(exec + 1) + "/" + instancia + ".sol";
+    escreverSeedMetricas(file_name, seed);
 
-      Solucao solucao_melhor_global;
-      solucao_melhor_global.funObj = 9999999;
+    Solucao solucao_melhor_global;
+    solucao_melhor_global.funObj = 9999999;
 
-      heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total, solucao_melhor_global, file_name);
+    heuristicaGrasp(alfa, tempo_limite, tempo_melhor, tempo_total, solucao_melhor_global, file_name);
 
-      escreverFinalMetricas(solucao_melhor_global, file_name, tempo_melhor);
-    }
+    escreverFinalMetricas(solucao_melhor_global, file_name, tempo_melhor);
+  }
   // }
 }
 
