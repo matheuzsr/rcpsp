@@ -16,6 +16,8 @@ echo "Hora de fim: $(date +%H:%M:%S)"
 duration=$((end_time - start_time))
 echo "Tempo gasto: $duration s"
 
-git add "metricas/exec_$1"
-git commit -m "Incluindo execucao $1 - $start_time"
+exec_var=$(($1 + 1))
+
+git add "metricas/exec_$exec_var"
+git commit -m "Incluindo execucao $exec_var: $start_time -- $duration"
 git push origin
