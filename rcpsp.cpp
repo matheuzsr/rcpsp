@@ -61,19 +61,23 @@ int main(int argc, char *argv[])
       x,
       x,
       x,
+      x,
 
       2 * x,
       2 * x,
       2 * x,
       2 * x,
       2 * x,
+      2 * x,
 
       3 * x,
       3 * x,
       3 * x,
       3 * x,
       3 * x,
+      3 * x,
 
+      4 * x,
       4 * x,
       4 * x,
       4 * x,
