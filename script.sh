@@ -24,4 +24,4 @@ exec_var=$(($1 + 1))
 
 git add "metricas/exec_$exec_var"
 git commit -m "Incluindo execucao $exec_var: $formated_start_time -- $formated_end_time"
-git push origin
+# git push origin

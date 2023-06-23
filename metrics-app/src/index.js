@@ -9,32 +9,36 @@ async function lerArquivoMetricas(caminhoArquivo) {
   }
 }
 
-const execs = ["exec_1"];
+const execs = ["exec_5"];
 
 const instancias = [
   "j30/j301_1",
   "j30/j301_2",
-  "j30/j301_3",
-  "j30/j301_4",
-  "j30/j301_5",
+  "j30/j3024_9",
+  "j30/j3024_10",
+  "j30/j3048_9",
+  "j30/j3048_10",
 
   "j60/j601_1",
   "j60/j601_2",
-  "j60/j601_3",
-  "j60/j601_4",
-  "j60/j601_5",
+  "j60/j6024_9",
+  "j60/j6024_10",
+  "j60/j6048_9",
+  "j60/j6048_10",
 
   "j90/j901_1",
   "j90/j901_2",
-  "j90/j901_3",
-  "j90/j901_4",
-  "j90/j901_5",
+  "j90/j9024_9",
+  "j90/j9024_10",
+  "j90/j9048_9",
+  "j90/j9048_10",
 
   "j120/j1201_1",
   "j120/j1201_2",
-  "j120/j1201_3",
-  "j120/j1201_4",
-  "j120/j1201_5",
+  "j120/j12030_9",
+  "j120/j12030_10",
+  "j120/j12060_9",
+  "j120/j12060_10",
 ];
 
 const getMelhorFO = (file) => {
@@ -46,7 +50,7 @@ const getMelhorFO = (file) => {
 const main = async () => {
   let i = 0;
   for (instancia of instancias) {
-    if((i % 5) === 0) {
+    if((i % 6) === 0) {
       console.log(instancia + ":");
     }
 
