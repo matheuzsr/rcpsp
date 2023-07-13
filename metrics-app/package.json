@@ -1,0 +1,15 @@
+{
+  "name": "metrics-app",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "license": "MIT",
+  "scripts": {
+    "start:dev": "tsx src/index.js",
+    "build": "tsup src"
+  },
+  "devDependencies": {
+    "tsup": "^6.7.0",
+    "tsx": "^3.12.7",
+    "typescript": "^5.0.4"
+  }
+}
