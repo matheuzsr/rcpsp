@@ -1,2 +1,3 @@
-# Trabalho da disciplina de métodos de otimização-ufes
-Planilha resutados: https://docs.google.com/spreadsheets/d/1zx_waF76RBvol8fBukzCVfEzfOAWKSW9gxgWzvTSl4w/edit#gid=0
+# [TCC] Algoritmo Híbrido GRASP e Simulated Annealing para o Problema de Escalonamento de Projetos com Restrição de Recursos - RCPSP
+
+Planilha resutados: https://docs.google.com/spreadsheets/d/1BEoGFOT_xCjosoKjM14FR44SsFidOIlEqyBi2A9F78c/edit#gid=1261925284
